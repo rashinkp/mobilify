@@ -4,14 +4,21 @@ import {
   useGetUserQuery,
   useUpdateUserMutation,
 } from "../redux/slices/userApiSlices";
-import { Edit, Calendar, User, Star, Briefcase, LifeBuoyIcon, PhoneCallIcon } from "lucide-react";
+import {
+  Edit,
+  Calendar,
+  User,
+  Star,
+  Briefcase,
+  LifeBuoyIcon,
+  PhoneCallIcon,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { errorToast, successToast } from "./toast";
-import { profileValidationSchema } from "../validationSchemas";
+import { profileValidationSchema } from "../validations/validationSchemas";
 import { RotatingLines } from "react-loader-spinner";
-
 
 const MyProfile = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -59,27 +66,26 @@ const MyProfile = () => {
     }
   };
 
+  if (isError) return <div>Error: {error.message}</div>;
 
-   if (isError) return <div>Error: {error.message}</div>;
-  
-    if (isLoading) {
-      return (
-        <div>
-          <div className="h-screen w-full absolute top-0 z-50 left-0 backdrop-blur-sm bg-black/30 flex justify-center items-center">
-            <RotatingLines
-              visible={true}
-              height="50"
-              width="50"
-              color="grey"
-              strokeColor="#fff"
-              strokeWidth="2"
-              animationDuration="8"
-              ariaLabel="rotating-lines-loading"
-            />
-          </div>
+  if (isLoading) {
+    return (
+      <div>
+        <div className="h-screen w-full absolute top-0 z-50 left-0 backdrop-blur-sm bg-black/30 flex justify-center items-center">
+          <RotatingLines
+            visible={true}
+            height="50"
+            width="50"
+            color="grey"
+            strokeColor="#fff"
+            strokeWidth="2"
+            animationDuration="8"
+            ariaLabel="rotating-lines-loading"
+          />
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

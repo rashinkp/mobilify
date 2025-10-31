@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { loginValidationSchema } from "../../validationSchemas";
+import { loginValidationSchema } from "../../validations/validationSchemas.js";
 import Form from "../../components/Form.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { errorToast, successToast } from "../../components/toast/index.js";

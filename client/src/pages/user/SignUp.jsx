@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import Form from "../../components/Form.jsx";
-import { signUpValidationSchema } from "../../validationSchemas";
-import SignGoogle from "../../components/user/SignGoogle";
-import { useDispatch, useSelector } from "react-redux";
+import { signUpValidationSchema } from "../../validations/validationSchemas.js";
+import {  useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { useSendOtpMutation } from "../../redux/slices/userApiSlices.js";
 import { errorToast, successToast } from "../../components/toast/index.js";

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Form from "../../components/Form.jsx";
-import { otpValidationSchema } from "../../validationSchemas";
+import { otpValidationSchema } from "../../validations/validationSchemas.js";
 import { useRegisterMutation, useResendotpMutation, useGetOtpTimeRemainingQuery } from "../../redux/slices/userApiSlices.js";
 import { errorToast, successToast } from "../../components/toast/index.js";
-import { useLocation, useNavigate, useParams } from "react-router";
+import {  useNavigate, useParams } from "react-router";
 import { useDispatch } from "react-redux";
 import { userLogin } from "../../redux/slices/authUser.js";
 const VerifyOtp = () => {

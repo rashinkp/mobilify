@@ -1,6 +1,6 @@
 import React from "react";
 import Form from "../Form";
-import { couponValidation } from "../../validationSchemas";
+import { couponValidation } from "../../validations/validationSchemas";
 import { useCategoryApi } from "../../hooks/useCategoryApi";
 
 const CouponForm = ({ isModalFormOpen, onClose, onSubmit }) => {

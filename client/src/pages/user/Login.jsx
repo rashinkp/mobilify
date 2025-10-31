@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Form from "../../components/Form.jsx";
-import { loginValidationSchema } from "../../validationSchemas";
+import { loginValidationSchema } from "../../validations/validationSchemas.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { useLoginMutation } from "../../redux/slices/userApiSlices.js";

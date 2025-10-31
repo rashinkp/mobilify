@@ -1,7 +1,6 @@
-import React from "react";
 import { MapPin, Plus } from "lucide-react";
 import AddAddressForm from "../user/AddAddressForm";
-import { addressValidationSchema } from "../../validationSchemas";
+import { addressValidationSchema } from "../../validations/validationSchemas";
 
 const  AddressSection = ({
   addresses,

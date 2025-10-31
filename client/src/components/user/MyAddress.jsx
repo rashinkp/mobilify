@@ -11,7 +11,7 @@ import Modal from "../Modal.jsx";
 import AddressEditForm from "./AddressEditForm.jsx";
 import AddressAddForm from "./AddAddressForm.jsx";
 import { RotatingLines } from "react-loader-spinner";
-import { addressValidationSchema } from "../../validationSchemas.js";
+import { addressValidationSchema } from "../../validations/validationSchemas.js";
 
 const MyAddress = () => {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
@@ -134,40 +134,44 @@ const MyAddress = () => {
           />
         )}
 
-        {addresses.length < 1 ? (<div className="text-center text-gray-400">No address yet</div>) : addresses.map((address, i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-slate-800 p-4 rounded-lg dark:border-none border mb-2 flex justify-between items-center"
-          >
-            <div>
-              <h3 className="font-semibold">{address.label}</h3>{" "}
-              <p className="text-gray-600 dark:text-gray-300">
-                {address.street}, {address.city},{address.state},
-                {address.postalCode},{address.country},
-              </p>
+        {addresses.length < 1 ? (
+          <div className="text-center text-gray-400">No address yet</div>
+        ) : (
+          addresses.map((address, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-slate-800 p-4 rounded-lg dark:border-none border mb-2 flex justify-between items-center"
+            >
+              <div>
+                <h3 className="font-semibold">{address.label}</h3>{" "}
+                <p className="text-gray-600 dark:text-gray-300">
+                  {address.street}, {address.city},{address.state},
+                  {address.postalCode},{address.country},
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  className="text-blue-600 hover:text-blue-700"
+                  onClick={() => {
+                    setCurrentAddress(address);
+                    setIsEditModalOpen(true);
+                  }}
+                >
+                  <Edit size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentAddress(address);
+                    setIsDelModalOpen(true);
+                  }}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <button
-                className="text-blue-600 hover:text-blue-700"
-                onClick={() => {
-                  setCurrentAddress(address);
-                  setIsEditModalOpen(true);
-                }}
-              >
-                <Edit size={16} />
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentAddress(address);
-                  setIsDelModalOpen(true);
-                }}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </>
   );

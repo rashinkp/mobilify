@@ -1,13 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  MapPin,
-  Truck,
-  CreditCard,
   Check,
-  PercentIcon,
   ShoppingCart,
-  IndianRupee,
-  Plus,
   Tag,
   ShoppingBasketIcon,
   Home,
@@ -26,8 +20,6 @@ import {
 } from "../../redux/slices/orderApiSlice.js";
 import { errorToast, successToast } from "../../components/toast/index.js";
 import { Link, useNavigate } from "react-router";
-import AddAddressForm from "../../components/user/AddAddressForm.jsx";
-import { addressValidationSchema } from "../../validationSchemas.js";
 import { useVerifyPaymentMutation } from "../../redux/slices/paymentApiSlice.js";
 import { useApplyCouponMutation } from "../../redux/slices/couponApiSlice.js";
 import AddressSection from "../../components/checkout/AddressSection.jsx";

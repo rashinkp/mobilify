@@ -7,7 +7,7 @@ import { useForgotPasswordMutation } from "../redux/slices/userApiSlices.js";
 import {
   passwordSchemaWithoutCurr,
   passwordValidation,
-} from "../validationSchemas";
+} from "../validations/validationSchemas.js";
 
 const EnterNewPassword = () => {
   const [changePassword] = useForgotPasswordMutation();

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Lock, EyeOff, Eye } from "lucide-react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { passwordSchema } from "../validationSchemas";
+import { passwordSchema } from "../validations/validationSchemas";
 import { errorToast, successToast } from "./toast";
 import { useChangePasswordMutation } from "../redux/slices/userApiSlices";
 import { RotatingLines } from "react-loader-spinner";
@@ -48,21 +48,21 @@ const ChangePassword = () => {
   };
 
   if (isLoading) {
-        return (
-          <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/30 flex justify-center items-center">
-            <RotatingLines
-              visible={true}
-              height="50"
-              width="50"
-              color="grey"
-              strokeColor="#fff"
-              strokeWidth="2"
-              animationDuration="8"
-              ariaLabel="rotating-lines-loading"
-            />
-          </div>
-        );
-      }
+    return (
+      <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/30 flex justify-center items-center">
+        <RotatingLines
+          visible={true}
+          height="50"
+          width="50"
+          color="grey"
+          strokeColor="#fff"
+          strokeWidth="2"
+          animationDuration="8"
+          ariaLabel="rotating-lines-loading"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

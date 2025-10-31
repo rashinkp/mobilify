@@ -1,6 +1,6 @@
 import React from "react";
 import Form from "../Form.jsx";
-import { productValidation } from "../../validationSchemas.js";
+import { productValidation } from "../../validations/validationSchemas.js";
 import { errorToast, successToast } from "../toast/index.js";
 import useProductApi from "../../hooks/useProductApi.jsx";
 import { useCategoryApi } from "../../hooks/useCategoryApi.jsx";

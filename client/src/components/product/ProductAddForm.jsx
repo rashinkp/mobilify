@@ -1,7 +1,7 @@
 import React from "react";
 import Form from "../Form";
 import { getProductFields } from "../product/productFields.js";
-import { productValidation } from "../../validationSchemas.js";
+import { productValidation } from "../../validations/validationSchemas.js";
 import { useGetAllCategoryQuery } from "../../redux/slices/categoryApiSlices.js";
 
 const ProductAddForm = ({ isModalFormOpen, onClose, onSubmit }) => {

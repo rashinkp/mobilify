@@ -1,8 +1,7 @@
-import React from "react";
 import Form from "../Form";
 import {
   brandValidationSchema
-} from "../../validationSchemas";
+} from "../../validations/validationSchemas";
 
 const BrandForm = ({ isModalFormOpen, onClose, onSubmit }) => {
   const brandFields = [

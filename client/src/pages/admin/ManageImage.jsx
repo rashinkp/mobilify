@@ -1,7 +1,5 @@
-import React, { useRef, useState, useEffect } from "react";
-import { imageValidationSchema } from "../../validationSchemas.js";
-import Button from "../../components/ui/Button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useRef, useState, useEffect } from "react";
+import { imageValidationSchema } from "../../validations/validationSchemas.js";
 import { errorToast, successToast } from "../../components/toast/index.js";
 import { uploadImageToCloudinary } from "../../uploads/cloudinaryConfig.js";
 import { Link, useParams } from "react-router";

@@ -1,6 +1,6 @@
 import React from "react";
 import Form from "../Form";
-import { categoryValidation } from "../../validationSchemas";
+import { categoryValidation } from "../../validations/validationSchemas";
 
 const CategoryForm = ({ isModalFormOpen, onClose, onSubmit }) => {
   const categoryFields = [

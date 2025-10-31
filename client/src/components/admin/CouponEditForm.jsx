@@ -1,6 +1,6 @@
 import React from "react";
 import Form from "../Form.jsx";
-import { couponValidation } from "../../validationSchemas.js"; // Add a validation schema for coupons
+import { couponValidation } from "../../validations/validationSchemas.js"; // Add a validation schema for coupons
 import { useEditCouponMutation } from "../../redux/slices/couponApiSlice.js";
 import { errorToast, successToast } from "../toast/index.js";
 

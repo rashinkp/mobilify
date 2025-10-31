@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Star } from "lucide-react";
-import { reviewSchema } from "../../validationSchemas";
+import { reviewSchema } from "../../validations/validationSchemas";
 import {
   useGetAReviewQuery,
   usePostReviewMutation,

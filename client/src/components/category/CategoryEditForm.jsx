@@ -1,6 +1,6 @@
 import React from "react";
 import Form from "../Form.jsx";
-import { categoryValidation } from "../../validationSchemas.js";
+import { categoryValidation } from "../../validations/validationSchemas.js";
 import { useEditCategoryMutation } from "../../redux/slices/categoryApiSlices.js";
 import { errorToast, successToast } from "../toast/index.js";
 
@@ -39,19 +39,18 @@ const CategoryEditForm = ({ category, onClose }) => {
     }
   };
 
-  const handleSubmit = async(data) => {
+  const handleSubmit = async (data) => {
     try {
-      await editCategory({categoryId:category._id, data}).unwrap();
+      await editCategory({ categoryId: category._id, data }).unwrap();
       successToast("Category updated successfully");
       onClose();
     } catch (error) {
-       errorToast(
-         error?.data?.message || error.message || "Failed to update category"
-       );
+      errorToast(
+        error?.data?.message || error.message || "Failed to update category"
+      );
     }
   };
 
- 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md"

@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
-  emailForm,
-  emailValidation,
   otpValidationSchema,
-} from "../validationSchemas";
+} from "../validations/validationSchemas";
 import { errorToast, successToast } from "./toast";
 import Form from "./Form";
 import { useOtpVerifcationMutation, useResendOtpEmailMutation, useGetOtpTimeRemainingByEmailQuery } from "../redux/slices/userApiSlices";
