@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { imageValidationSchema } from "../../validations/validationSchemas.js";
 import { errorToast, successToast } from "../../components/toast/index.js";
-import { uploadImageToCloudinary } from "../../uploads/cloudinaryConfig.js";
+import { uploadImageToCloudinary } from "../../config/cloudinaryConfig.js";
 import { Link, useParams } from "react-router";
 import {
   useGetProductQuery,

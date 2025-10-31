@@ -1,9 +1,39 @@
 import * as Yup from "yup";
 
+// Helper function to detect emojis and special unicode characters
+const hasEmoji = (value) => {
+  if (!value) return false;
+  // Comprehensive emoji regex pattern
+  const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{FE00}-\u{FE0F}]|[\u{200D}]|[\u{203C}-\u{3299}]/gu;
+  return emojiRegex.test(value);
+};
+
+// Helper function to check for only alphanumeric and basic characters (no emojis, no special unicode)
+const isBasicText = (value) => {
+  if (!value) return true;
+  // Allow letters, numbers, spaces, and basic punctuation
+  const basicTextRegex = /^[a-zA-Z0-9\s\-_.,!?@#$%^&*()+=:;"'<>\[\]{}|\\\/`~]*$/;
+  return basicTextRegex.test(value) && !hasEmoji(value);
+};
+
 export const emailValidation = Yup.string()
   .email("Invalid email format")
-  .required("Email is required");
-
+  .required("Email is required")
+  .test(
+    "no-emoji",
+    "Email cannot contain emojis or special characters",
+    (value) => !hasEmoji(value) && isBasicText(value)
+  )
+  .test(
+    "valid-email-chars",
+    "Email contains invalid characters",
+    (value) => {
+      if (!value) return true;
+      // Standard email regex without emojis
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      return emailRegex.test(value) && !hasEmoji(value);
+    }
+  );
 
 export const emailForm = Yup.object().shape({
   email: emailValidation
@@ -11,16 +41,46 @@ export const emailForm = Yup.object().shape({
 
 export const passwordValidation = Yup.string()
   .required("Password is required")
-  .min(6, "Password must be at least 6 characters");
+  .min(6, "Password must be at least 6 characters")
+  .test(
+    "no-emoji",
+    "Password cannot contain emojis",
+    (value) => !hasEmoji(value)
+  )
+  .test(
+    "valid-password-chars",
+    "Password contains invalid characters",
+    (value) => {
+      if (!value) return true;
+      // Allow letters, numbers, and common special characters
+      const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]*$/;
+      return passwordRegex.test(value) && !hasEmoji(value);
+    }
+  );
 
 export const nameValidation = Yup.string()
   .required("Name is required")
-  .min(4, "Minimum 4 characters required")
-  .max(100, "Maximum 100 characters allowed")
+  .min(2, "Name must be at least 2 characters")
+  .max(20, "Name must not exceed 20 characters")
   .test(
     "no-only-whitespace", 
     "Name cannot contain only white spaces", 
     (value) => value && value.trim().length > 0 
+  )
+  .test(
+    "no-emoji",
+    "Name cannot contain emojis",
+    (value) => !hasEmoji(value)
+  )
+  .test(
+    "valid-name-chars",
+    "Name can only contain letters, numbers, spaces, hyphens, and apostrophes",
+    (value) => {
+      if (!value) return true;
+      // Allow letters, numbers, spaces, hyphens, and apostrophes
+      const nameRegex = /^[a-zA-Z0-9\s\-']*$/;
+      return nameRegex.test(value) && !hasEmoji(value);
+    }
   );
 
 export const descriptionValidation = Yup.string()
@@ -33,8 +93,13 @@ export const signUpValidationSchema = Yup.object().shape({
   email: emailValidation,
   password: passwordValidation,
   confirmPassword: Yup.string()
+    .required("Confirm password is required")
     .oneOf([Yup.ref("password"), null], "Passwords must match")
-    .required("Confirm password is required"),
+    .test(
+      "no-emoji",
+      "Password cannot contain emojis",
+      (value) => !hasEmoji(value)
+    ),
 });
 
 export const loginValidationSchema = Yup.object().shape({
@@ -44,9 +109,31 @@ export const loginValidationSchema = Yup.object().shape({
 
 export const otpValidationSchema = Yup.object().shape({
   otp: Yup.string()
-    .matches(/^[0-9]+$/, "Only numbers are allowed")
     .required("OTP is required")
-    .min(4, "OTP must be at least 4 characters"),
+    .matches(/^[0-9]+$/, "OTP must contain only numbers")
+    .length(6, "OTP must be exactly 6 digits")
+    .test(
+      "no-emoji",
+      "OTP cannot contain emojis",
+      (value) => !hasEmoji(value)
+    ),
+  referral: Yup.string()
+    .nullable()
+    .test(
+      "no-emoji",
+      "Referral code cannot contain emojis",
+      (value) => !value || !hasEmoji(value)
+    )
+    .test(
+      "valid-referral-chars",
+      "Referral code can only contain letters, numbers, hyphens, and underscores",
+      (value) => {
+        if (!value) return true;
+        const referralRegex = /^[a-zA-Z0-9_-]*$/;
+        return referralRegex.test(value) && !hasEmoji(value);
+      }
+    )
+    .max(20, "Referral code must not exceed 20 characters"),
 });
 
 export const brandValidationSchema = Yup.object().shape({
@@ -246,11 +333,31 @@ export const profileValidationSchema = Yup.object().shape({
 
 
 export const passwordSchema = Yup.object().shape({
-    currentPassword: Yup.string().required("Current password is required"),
+    currentPassword: Yup.string()
+      .required("Current password is required")
+      .test(
+        "no-emoji",
+        "Password cannot contain emojis",
+        (value) => !hasEmoji(value)
+      ),
     newPassword: Yup
       .string()
       .required("New password is required")
       .min(6, "Password must be at least 6 characters")
+      .test(
+        "no-emoji",
+        "Password cannot contain emojis",
+        (value) => !hasEmoji(value)
+      )
+      .test(
+        "valid-password-chars",
+        "Password contains invalid characters",
+        (value) => {
+          if (!value) return true;
+          const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]*$/;
+          return passwordRegex.test(value) && !hasEmoji(value);
+        }
+      )
       .notOneOf(
         [Yup.ref("currentPassword")],
         "New password must be different from current password"
@@ -258,7 +365,12 @@ export const passwordSchema = Yup.object().shape({
     confirmNewPassword: Yup
       .string()
       .required("Please confirm your new password")
-      .oneOf([Yup.ref("newPassword")], "Passwords must match"),
+      .oneOf([Yup.ref("newPassword")], "Passwords must match")
+      .test(
+        "no-emoji",
+        "Password cannot contain emojis",
+        (value) => !hasEmoji(value)
+      ),
 });
   
 
@@ -266,13 +378,28 @@ export const passwordSchemaWithoutCurr = Yup.object().shape({
   newPassword: Yup.string()
     .required("New password is required")
     .min(6, "Password must be at least 6 characters")
-    .notOneOf(
-      [Yup.ref("currentPassword")],
-      "New password must be different from current password"
+    .test(
+      "no-emoji",
+      "Password cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-password-chars",
+      "Password contains invalid characters",
+      (value) => {
+        if (!value) return true;
+        const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]*$/;
+        return passwordRegex.test(value) && !hasEmoji(value);
+      }
     ),
   confirmNewPassword: Yup.string()
     .required("Please confirm your new password")
-    .oneOf([Yup.ref("newPassword")], "Passwords must match"),
+    .oneOf([Yup.ref("newPassword")], "Passwords must match")
+    .test(
+      "no-emoji",
+      "Password cannot contain emojis",
+      (value) => !hasEmoji(value)
+    ),
 });
 
 

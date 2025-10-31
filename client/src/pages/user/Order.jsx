@@ -31,7 +31,7 @@ import { errorToast, successToast } from "../../components/toast";
 import { useGetProductQuery } from "../../redux/slices/productApiSlice";
 import CancelConfirmation from "../../components/CancelConfirmation.jsx";
 import jsPDF from "jspdf";
-import { handleDownloadInvoice } from "../../components/downloadInvoice";
+import { handleDownloadInvoice } from "../../script/downloadInvoice.js";
 import PriceBreakdown from "../../components/Billing";
 import { useVerifyPaymentMutation } from "../../redux/slices/paymentApiSlice";
 import ProductReviewForm from "../../components/reviews/ProductReviewForm";

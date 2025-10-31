@@ -31,7 +31,7 @@ import { RotatingLines } from "react-loader-spinner";
 import noImage from "../../assets/noImage.png";
 import MyEmail from "../../components/user/MyEmail";
 
-import { uploadImageToCloudinary } from "../../uploads/cloudinaryConfig";
+import { uploadImageToCloudinary } from "../../config/cloudinaryConfig.js";
 import ChangePassword from "../../components/ChangePassword";
 import OrderListingPage from "../../components/MyOrders";
 import WishList from "./WishList";
@@ -107,8 +107,6 @@ const UserProfileDashboard = () => {
       console.log(err);
     }
   };
-
-
 
   if (isError) return <div>Error: {error.message}</div>;
 
