@@ -48,7 +48,13 @@ export const getAddress = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const addresses = user?.addresses;
+    let addresses = user?.addresses || [];
+
+    // Apply limit if provided in query params
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    if (limit && limit > 0) {
+      addresses = addresses.slice(0, limit);
+    }
 
     return res.status(200).json({ addresses });
   } catch (error) {

@@ -30,7 +30,7 @@ const Form = ({
   return (
     <form
       onSubmit={handleSubmit(onFormSubmit)}
-      className="max-w-lg w-full mx-auto p-8  dark:bg-black shadow-md rounded-md space-y-6 overflow-auto max-h-[90vh]"
+      className="w-full space-y-6"
     >
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white text-center">
         {title}
@@ -76,7 +76,22 @@ const Form = ({
                   type={field.type}
                   id={field.name}
                   placeholder={field.placeholder}
-                  {...controlledField}
+                  value={controlledField.value}
+                  onBlur={controlledField.onBlur}
+                  name={controlledField.name}
+                  ref={controlledField.ref}
+                  maxLength={field.maxLength}
+                  pattern={field.pattern}
+                  inputMode={field.inputMode}
+                  onChange={(e) => {
+                    // Special handling for postalCode to only allow numbers
+                    if (field.name === "postalCode") {
+                      const value = e.target.value.replace(/\D/g, '');
+                      controlledField.onChange(value);
+                    } else {
+                      controlledField.onChange(e);
+                    }
+                  }}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               )

@@ -270,65 +270,259 @@ export const imageValidationSchema = Yup.object().shape({
 export const addressValidationSchema = Yup.object().shape({
   label: Yup.string()
     .required("Label is required")
+    .min(2, "Label must be at least 2 characters")
+    .max(50, "Label must not exceed 50 characters")
     .test(
       "no-only-whitespace",
-      "Name cannot contain only white spaces",
+      "Label cannot contain only white spaces",
       (value) => value && value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "Label cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-chars",
+      "Label can only contain letters, numbers, spaces, hyphens, and apostrophes",
+      (value) => {
+        if (!value) return true;
+        const labelRegex = /^[a-zA-Z0-9\s\-']*$/;
+        return labelRegex.test(value) && !hasEmoji(value);
+      }
     ),
   street: Yup.string()
-    .required("Street is required")
+    .required("Street address is required")
+    .min(5, "Street address must be at least 5 characters")
+    .max(200, "Street address must not exceed 200 characters")
     .test(
       "no-only-whitespace",
-      "Name cannot contain only white spaces",
+      "Street address cannot contain only white spaces",
       (value) => value && value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "Street address cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-chars",
+      "Street address can only contain letters, numbers, spaces, and basic punctuation",
+      (value) => {
+        if (!value) return true;
+        const streetRegex = /^[a-zA-Z0-9\s\-.,'#/]*$/;
+        return streetRegex.test(value) && !hasEmoji(value);
+      }
     ),
   city: Yup.string()
     .required("City is required")
+    .min(2, "City must be at least 2 characters")
+    .max(100, "City must not exceed 100 characters")
     .test(
       "no-only-whitespace",
-      "Name cannot contain only white spaces",
+      "City cannot contain only white spaces",
       (value) => value && value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "City cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-chars",
+      "City can only contain letters, spaces, hyphens, and apostrophes",
+      (value) => {
+        if (!value) return true;
+        const cityRegex = /^[a-zA-Z\s\-']*$/;
+        return cityRegex.test(value) && !hasEmoji(value);
+      }
     ),
   state: Yup.string()
     .required("State is required")
+    .min(2, "State must be at least 2 characters")
+    .max(100, "State must not exceed 100 characters")
     .test(
       "no-only-whitespace",
-      "Name cannot contain only white spaces",
+      "State cannot contain only white spaces",
       (value) => value && value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "State cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-chars",
+      "State can only contain letters, spaces, hyphens, and apostrophes",
+      (value) => {
+        if (!value) return true;
+        const stateRegex = /^[a-zA-Z\s\-']*$/;
+        return stateRegex.test(value) && !hasEmoji(value);
+      }
     ),
   postalCode: Yup.string()
-    .matches(/^[0-9]{5}$/, "Postal code must be 5 digits")
-    .required("Postal code is required")
+    .required("Pincode is required")
+    .matches(/^[0-9]{6}$/, "Pincode must be exactly 6 digits")
     .test(
-      "no-only-whitespace",
-      "Name cannot contain only white spaces",
-      (value) => value && value.trim().length > 0
+      "no-emoji",
+      "Pincode cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "no-spaces",
+      "Pincode cannot contain spaces",
+      (value) => value && !value.includes(" ")
     ),
   country: Yup.string()
     .required("Country is required")
+    .min(2, "Country must be at least 2 characters")
+    .max(100, "Country must not exceed 100 characters")
     .test(
       "no-only-whitespace",
-      "Name cannot contain only white spaces",
+      "Country cannot contain only white spaces",
       (value) => value && value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "Country cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-chars",
+      "Country can only contain letters, spaces, hyphens, and apostrophes",
+      (value) => {
+        if (!value) return true;
+        const countryRegex = /^[a-zA-Z\s\-']*$/;
+        return countryRegex.test(value) && !hasEmoji(value);
+      }
     ),
 });
 
 export const profileValidationSchema = Yup.object().shape({
   dateOfBirth: Yup.date()
+    .required("Date of birth is required")
     .max(new Date(), "Date of birth cannot be in the future")
-    .nullable()
-    .required("Date of birth is required"),
+    .test(
+      "minimum-age",
+      "You must be at least 13 years old",
+      function (value) {
+        if (!value) return true;
+        const today = new Date();
+        const birthDate = new Date(value);
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+        
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) 
+          ? age - 1 
+          : age;
+        
+        return actualAge >= 13;
+      }
+    )
+    .test(
+      "maximum-age",
+      "Please enter a valid date of birth",
+      function (value) {
+        if (!value) return true;
+        const today = new Date();
+        const birthDate = new Date(value);
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+        
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) 
+          ? age - 1 
+          : age;
+        
+        return actualAge <= 120;
+      }
+    )
+    .typeError("Please enter a valid date"),
   phoneNumber: Yup.string()
-    .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
-    .required("Phone number is required"),
+    .required("Phone number is required")
+    .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
+    .test(
+      "no-emoji",
+      "Phone number cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "no-spaces",
+      "Phone number cannot contain spaces",
+      (value) => value && !value.includes(" ")
+    )
+    .test(
+      "no-special-chars",
+      "Phone number must contain only digits",
+      (value) => {
+        if (!value) return true;
+        return /^[0-9]+$/.test(value);
+      }
+    ),
   name: Yup.string()
-    .required("Username is required")
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be at most 20 characters"),
-  bio: Yup.string().max(500, "Bio must be at most 500 characters").nullable(),
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name must not exceed 50 characters")
+    .test(
+      "no-only-whitespace",
+      "Name cannot contain only white spaces",
+      (value) => value && value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "Name cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-name-chars",
+      "Name can only contain letters, numbers, spaces, hyphens, and apostrophes",
+      (value) => {
+        if (!value) return true;
+        const nameRegex = /^[a-zA-Z0-9\s\-']*$/;
+        return nameRegex.test(value) && !hasEmoji(value);
+      }
+    ),
+  bio: Yup.string()
+    .max(500, "Bio must not exceed 500 characters")
+    .nullable()
+    .test(
+      "no-emoji",
+      "Bio cannot contain emojis",
+      (value) => !value || !hasEmoji(value)
+    )
+    .test(
+      "valid-bio-chars",
+      "Bio contains invalid characters",
+      (value) => {
+        if (!value) return true;
+        // Allow letters, numbers, spaces, and basic punctuation for bio
+        const bioRegex = /^[a-zA-Z0-9\s\-.,!?@#$%^&*()+=:;"'<>\[\]{}|\\\/`~]*$/;
+        return bioRegex.test(value) && !hasEmoji(value);
+      }
+    ),
   occupation: Yup.string()
-    .max(100, "Occupation must be at most 100 characters")
-    .nullable(),
+    .max(100, "Occupation must not exceed 100 characters")
+    .nullable()
+    .test(
+      "no-only-whitespace",
+      "Occupation cannot contain only white spaces",
+      (value) => !value || value.trim().length > 0
+    )
+    .test(
+      "no-emoji",
+      "Occupation cannot contain emojis",
+      (value) => !value || !hasEmoji(value)
+    )
+    .test(
+      "valid-occupation-chars",
+      "Occupation can only contain letters, numbers, spaces, hyphens, and apostrophes",
+      (value) => {
+        if (!value) return true;
+        const occupationRegex = /^[a-zA-Z0-9\s\-.,'&()]*$/;
+        return occupationRegex.test(value) && !hasEmoji(value);
+      }
+    ),
 });
 
 
@@ -452,13 +646,55 @@ export const reviewSchema = Yup.object().shape({
   rating: Yup.number()
     .min(1, "Please select a rating")
     .max(5, "Invalid rating")
-    .required("Rating is required"),
+    .required("Rating is required")
+    .integer("Rating must be a whole number")
+    .typeError("Rating must be a number"),
   title: Yup.string()
+    .required("Review title is required")
     .min(5, "Title must be at least 5 characters")
-    .max(50, "Title must not exceed 50 characters")
-    .required("Title is required"),
+    .max(100, "Title must not exceed 100 characters")
+    .test(
+      "no-only-whitespace",
+      "Title cannot contain only white spaces",
+      (value) => value && value.trim().length >= 5
+    )
+    .test(
+      "no-emoji",
+      "Title cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-title-chars",
+      "Title contains invalid characters",
+      (value) => {
+        if (!value) return true;
+        // Allow letters, numbers, spaces, and basic punctuation for review titles
+        const titleRegex = /^[a-zA-Z0-9\s\-.,!?'"():]*$/;
+        return titleRegex.test(value) && !hasEmoji(value);
+      }
+    ),
   description: Yup.string()
+    .required("Review description is required")
     .min(20, "Description must be at least 20 characters")
-    .max(500, "Description must not exceed 500 characters")
-    .required("Description is required"),
+    .max(1000, "Description must not exceed 1000 characters")
+    .test(
+      "no-only-whitespace",
+      "Description cannot contain only white spaces",
+      (value) => value && value.trim().length >= 20
+    )
+    .test(
+      "no-emoji",
+      "Description cannot contain emojis",
+      (value) => !hasEmoji(value)
+    )
+    .test(
+      "valid-description-chars",
+      "Description contains invalid characters",
+      (value) => {
+        if (!value) return true;
+        // Allow letters, numbers, spaces, and extended punctuation for reviews
+        const descRegex = /^[a-zA-Z0-9\s\-.,!?@#$%^&*()+=:;"'<>\[\]{}|\\\/`~]*$/;
+        return descRegex.test(value) && !hasEmoji(value);
+      }
+    ),
 });

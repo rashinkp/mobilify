@@ -197,6 +197,7 @@ const OrderDetailsPage = () => {
         key: "rzp_test_K5otU6Q5C8lSi8",
         amount: Math.round(finalPrice * 100),
         currency: "INR",
+        retry:false,
         handler: (response) =>
           handleRazorpaySuccess(razorpayOrderData, response),
         prefill: {

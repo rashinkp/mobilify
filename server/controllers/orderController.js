@@ -82,6 +82,7 @@ export const addOrder = asyncHandler(async (req, res) => {
       imageUrl: item.imageUrl,
       returnPolicy: item.returnPolicy,
       shipping: shipping,
+      shippingCost: shipping?.price || 0,
       paymentMethod: paymentMethod,
       shippingAddress: shippingAddress,
       offerPrice: item.offerPrice,
@@ -105,13 +106,16 @@ export const addOrder = asyncHandler(async (req, res) => {
       await product.save();
     }
 
-    // Clear cart
-    const cart = await Cart.findOne({ userId });
+    // Clear cart - Convert userId to ObjectId for consistency
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const cart = await Cart.findOne({ userId: userObjectId });
 
-    console.log(cart);
     if (cart) {
       cart.cartItems = [];
       await cart.save();
+      console.log("Cart cleared successfully for user:", userId);
+    } else {
+      console.log("No cart found for user:", userId);
     }
 
     res.status(201).json({
@@ -268,39 +272,75 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-async function handleRefund(order, previousPaymentStatus) {
-  if (!isNewRefundEligible(order, previousPaymentStatus)) {
+async function restoreStock(order) {
+  try {
+    const product = await Product.findById(order.productId);
+    if (product) {
+      product.stock += Number(order.quantity);
+      await product.save();
+      console.log(`Stock restored for product ${product.name}: +${order.quantity} units`);
+    } else {
+      console.error(`Product not found for order: ${order.productId}`);
+    }
+  } catch (error) {
+    console.error("Error restoring stock:", error);
+  }
+}
+
+async function handleRefund(order, previousPaymentStatus, currentStatus) {
+  if (!isNewRefundEligible(order, previousPaymentStatus, currentStatus)) {
     return;
   }
 
-  const refundAmount = order.price;
+  // Calculate total refund amount (product price * quantity + shipping cost)
+  const productAmount = Number(order.price) * Number(order.quantity);
+  const shippingAmount = Number(order.shippingCost) || Number(order.shipping?.price) || 0;
+  const refundAmount = productAmount + shippingAmount;
+
+  // Skip refund for Cash on Delivery if payment was not successful
+  if (order.paymentMethod === "Cash On Delivery" && previousPaymentStatus !== "Successful") {
+    console.log("COD order cancelled - no refund needed");
+    return;
+  }
+
   const wallet = await Wallet.findOne({ userId: order.userId });
 
   if (!wallet) {
-    await Wallet.create({
+    const newWallet = await Wallet.create({
       userId: order.userId,
       balance: Number(refundAmount),
+    });
+    
+    await Transaction.create({
+      walletId: newWallet._id,
+      userId: order.userId,
+      type: "Credit",
+      amount: refundAmount,
+      description: `Refund for ${currentStatus === "Cancelled" ? "cancelled" : "returned"} order`,
+      status: "Successful",
     });
   } else {
     wallet.balance = Number(wallet.balance) + Number(refundAmount);
     await wallet.save();
+    
+    await Transaction.create({
+      walletId: wallet._id,
+      userId: order.userId,
+      type: "Credit",
+      amount: refundAmount,
+      description: `Refund for ${currentStatus === "Cancelled" ? "cancelled" : "returned"} order`,
+      status: "Successful",
+    });
   }
 
-  await Transaction.create({
-    walletId: wallet._id,
-    userId: order.userId,
-    type: "Credit",
-    amount: refundAmount,
-    description: "Refund of product",
-    status: "Successful",
-  });
+  console.log(`Refund processed: ₹${refundAmount} (Product: ₹${productAmount}, Shipping: ₹${shippingAmount})`);
 }
 
-function isNewRefundEligible(order, previousPaymentStatus) {
+function isNewRefundEligible(order, previousPaymentStatus, currentStatus) {
   return (
-    order.paymentStatus === "Refunded" &&
+    (currentStatus === "Cancelled" || currentStatus === "Returned") &&
     previousPaymentStatus !== "Refunded" &&
-    (order.status === "Cancelled" || order.status === "Returned")
+    (previousPaymentStatus === "Successful" || order.paymentMethod !== "Cash On Delivery")
   );
 }
 
@@ -350,6 +390,7 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     const previousPaymentStatus = order.paymentStatus;
+    const previousStatus = order.status;
 
     order.status = newStatus || order.status;
     order.paymentStatus = newPaymentStatus || order.paymentStatus;
@@ -367,18 +408,40 @@ export const updateOrderStatus = async (req, res) => {
       }
     }
 
+    // Restore stock when order is cancelled or returned
+    // Only restore if status is changing TO cancelled/returned (not already cancelled/returned)
+    if (
+      (newStatus === "Cancelled" || newStatus === "Returned") &&
+      previousStatus !== "Cancelled" &&
+      previousStatus !== "Returned"
+    ) {
+      await restoreStock(order);
+    }
 
+    // Handle refund process - set payment status to Refunded for cancelled/returned orders that were paid
+    if (
+      (newStatus === "Cancelled" || newStatus === "Returned") &&
+      previousPaymentStatus !== "Refunded"
+    ) {
+      // Only refund if payment was successful or not COD
+      if (previousPaymentStatus === "Successful" || order.paymentMethod !== "Cash On Delivery") {
+        order.paymentStatus = "Refunded";
+      } else if (order.paymentMethod === "Cash On Delivery") {
+        // COD orders don't need refund if payment wasn't successful
+        order.paymentStatus = previousPaymentStatus;
+      }
+    }
 
-    // Handle refund process
-    await handleRefund(order, previousPaymentStatus);
+    // Handle refund process (adds money to wallet)
+    await handleRefund(order, previousPaymentStatus, newStatus || order.status);
 
-    // Validate refund status
+    // Validate refund status - if order is not cancelled/returned but payment is refunded, reset it
     if (
       order.paymentStatus === "Refunded" &&
       order.status !== "Cancelled" &&
       order.status !== "Returned"
     ) {
-      order.paymentStatus = "Pending";
+      order.paymentStatus = previousPaymentStatus || "Pending";
     }
 
     await order.save();

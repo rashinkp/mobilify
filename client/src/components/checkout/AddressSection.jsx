@@ -1,4 +1,4 @@
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import AddAddressForm from "../user/AddAddressForm";
 import { addressValidationSchema } from "../../validations/validationSchemas";
 
@@ -9,6 +9,10 @@ const  AddressSection = ({
   isAddingAddress,
   setIsAddingAddress,
   handleAddAddress,
+  hasMoreAddresses,
+  showAllAddresses,
+  setShowAllAddresses,
+  isLoadingAll,
 }) => {
   return (
     <section className="mb-6">
@@ -16,12 +20,32 @@ const  AddressSection = ({
         <MapPin className="mr-2" /> Shipping Address
       </h2>
       <div className="flex flex-col">
-        <button
-          onClick={() => setIsAddingAddress(true)}
-          className="text-green-600 ms-auto mb-5 hover:text-green-700 flex items-center"
-        >
-          <Plus size={16} className="mr-2" /> Add New
-        </button>
+        <div className="flex items-center justify-between mb-5">
+          {hasMoreAddresses && !showAllAddresses && (
+            <button
+              onClick={() => setShowAllAddresses(true)}
+              className="text-indigo-600 hover:text-indigo-700 flex items-center text-sm font-medium"
+            >
+              View All Addresses
+              <ChevronDown size={16} className="ml-1" />
+            </button>
+          )}
+          {showAllAddresses && (
+            <button
+              onClick={() => setShowAllAddresses(false)}
+              className="text-indigo-600 hover:text-indigo-700 flex items-center text-sm font-medium"
+            >
+              Show Less
+              <ChevronUp size={16} className="ml-1" />
+            </button>
+          )}
+          <button
+            onClick={() => setIsAddingAddress(true)}
+            className="text-green-600 ms-auto hover:text-green-700 flex items-center"
+          >
+            <Plus size={16} className="mr-2" /> Add New
+          </button>
+        </div>
         {isAddingAddress && (
           <AddAddressForm
             onCancel={() => setIsAddingAddress(false)}
@@ -31,7 +55,9 @@ const  AddressSection = ({
         )}
       </div>
       <div className="grid md:grid-cols-2 gap-4">
-        {addresses.length > 0 ? (
+        {isLoadingAll ? (
+          <p className="text-gray-500 col-span-2 text-center">Loading all addresses...</p>
+        ) : addresses?.length > 0 ? (
           addresses.map((address) => (
             <div
               key={address._id}

@@ -20,8 +20,10 @@ const PriceBreakdown = ({ order }) => {
   
 const subTotal = order.price * (order?.quantity || 1);
 
+  // Get shipping cost from shipping.price or shippingCost field
+  const shippingCost = order.shipping?.price || order.shippingCost || 0;
 
-  const finalPrice = subTotal - discount;
+  const finalPrice = subTotal - discount + shippingCost;
 
   return (
     <div className="space-y-3 mt-2">
@@ -52,7 +54,7 @@ const subTotal = order.price * (order?.quantity || 1);
 
       <div className="flex items-center justify-between text-gray-600">
         <span>Shipping:</span>
-        <span>₹{formatter.format(order.shippingCost || 0)}</span>
+        <span>₹{formatter.format(order.shipping?.price || order.shippingCost || 0)}</span>
       </div>
 
       <div className="h-px bg-gray-200 my-2" />

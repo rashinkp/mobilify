@@ -49,16 +49,20 @@ const CheckoutPage = () => {
   const [debitAmountFromWallet] = useDebitAmountMutation();
   const [addToFailedPayment] = useFailedOrderMutation();
   const [hasInsufficientStock, setHasInsufficientStock] = useState(false);
+  const [showAllAddresses, setShowAllAddresses] = useState(false);
 
-  //api calling
-
-  // Address API response
   const {
     data: addressData,
     isLoading: isAddressLoading,
     isError: isAddressError,
     error: addressError,
-  } = useGetAddressQuery(null);
+  } = useGetAddressQuery({ limit: 4 });
+
+  // Fetch all addresses when user wants to see all
+  const {
+    data: allAddressData,
+    isLoading: isAllAddressLoading,
+  } = useGetAddressQuery({}, { skip: !showAllAddresses });
 
   // Cart API response
   const {
@@ -69,7 +73,11 @@ const CheckoutPage = () => {
     refetch: refetchCart,
   } = useGetCartQuery();
 
-  const { addresses } = addressData || {};
+  // Use all addresses if showAllAddresses is true, otherwise use limited addresses
+  const { addresses: limitedAddresses } = addressData || {};
+  const { addresses: allAddresses } = allAddressData || {};
+  const addresses = showAllAddresses ? allAddresses : limitedAddresses;
+  const hasMoreAddresses = limitedAddresses?.length === 4;
 
   const products = cartData.cartItems || [];
 
@@ -87,9 +95,15 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     if (addresses && addresses.length > 0) {
-      setSelectedAddress(addresses[0]);
+      // If previously selected address exists in the current list, keep it
+      // Otherwise, select the first address
+      const selectedExists = selectedAddress && addresses.some(addr => addr._id === selectedAddress._id);
+      if (!selectedExists || !selectedAddress) {
+        setSelectedAddress(addresses[0]);
+      }
     }
-  }, [addresses]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addresses, showAllAddresses]);
 
   const shippingMethods = [
     {
@@ -123,9 +137,8 @@ const CheckoutPage = () => {
 
   const handleAddAddress = async (data) => {
     console.log("Form Submitted:", data);
-    const userId = cartData.userId;
     try {
-      await addAddress({ data, userId });
+      await addAddress(data);
       successToast("Address added successfully");
     } catch (error) {
       errorToast(
@@ -192,6 +205,7 @@ const CheckoutPage = () => {
             errorToast("Failed to create order. Please try again.");
             return;
           }
+          await refetchCart();
           successToast("Payment successful!");
           navigate(`/orderSuccess`);
         } else {
@@ -301,6 +315,8 @@ const CheckoutPage = () => {
       } else if (selectedPayment === "Cash On Delivery") {
         const response = await placeOrder(orderData).unwrap();
         if (response) {
+          // Refetch cart to clear it from cache
+          await refetchCart();
           successToast("Order placed successfully");
           navigate(`/orderSuccess`);
         } else {
@@ -312,6 +328,8 @@ const CheckoutPage = () => {
 
         const response = await placeOrder(orderData).unwrap();
         if (response) {
+          // Refetch cart to clear it from cache
+          await refetchCart();
           successToast("Order placed successfully");
           navigate(`/orderSuccess`);
         } else {
@@ -389,6 +407,10 @@ const CheckoutPage = () => {
           isAddingAddress={isAddingAddress}
           setIsAddingAddress={setIsAddingAddress}
           handleAddAddress={handleAddAddress}
+          hasMoreAddresses={hasMoreAddresses}
+          showAllAddresses={showAllAddresses}
+          setShowAllAddresses={setShowAllAddresses}
+          isLoadingAll={isAllAddressLoading}
         />
 
         <OrderSummery products={products} />

@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Ban, ChevronRight, DatabaseBackup, Eye, Home } from "lucide-react";
+import {
+  Ban,
+  ChevronRight,
+  DatabaseBackup,
+  Eye,
+  Home,
+  User,
+} from "lucide-react";
 import SearchBar from "../../components/SearchBar";
 import ListItem from "../../components/admin/ListItem";
 import {
@@ -93,11 +100,7 @@ const UserManagement = () => {
             className="w-12 h-12 rounded-full object-cover"
           />
         ) : (
-          <img
-            src={noImage}
-            alt="Product"
-            className="w-12 h-12 rounded-full object-cover"
-          />
+          <User />
         ),
     },
     {

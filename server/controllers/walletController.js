@@ -50,8 +50,28 @@ export const addAmountToWallet = asyncHandler(async (req, res) => {
   const { userId } = req.user;
   const { amount, paymentId, description = "" } = req.body;
 
+  // Validation constants
+  const MIN_AMOUNT = 100; // Minimum ₹100
+  const MAX_AMOUNT = 100000; // Maximum ₹1,00,000
+
   if (!userId || !amount || isNaN(amount) || amount <= 0) {
     return res.status(400).json({ message: "Enter correct amount" });
+  }
+
+  const numericAmount = Number(amount);
+
+  // Validate minimum amount
+  if (numericAmount < MIN_AMOUNT) {
+    return res.status(400).json({ 
+      message: `Minimum amount to add is ₹${MIN_AMOUNT.toLocaleString("en-IN")}` 
+    });
+  }
+
+  // Validate maximum amount
+  if (numericAmount > MAX_AMOUNT) {
+    return res.status(400).json({ 
+      message: `Maximum amount to add is ₹${MAX_AMOUNT.toLocaleString("en-IN")}` 
+    });
   }
 
   const wallet = await Wallet.findOne({ userId });

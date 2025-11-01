@@ -47,7 +47,14 @@ const MyProfile = () => {
   useEffect(() => {
     if (user) {
       setValue("name", user.name || "");
-      setValue("dateOfBirth", user.dateOfBirth || "");
+      // Format date for date input (YYYY-MM-DD)
+      if (user.dateOfBirth) {
+        const date = new Date(user.dateOfBirth);
+        const formattedDate = date.toISOString().split('T')[0];
+        setValue("dateOfBirth", formattedDate);
+      } else {
+        setValue("dateOfBirth", "");
+      }
       setValue("phoneNumber", user.phoneNumber || "");
       setValue("bio", user.bio || "");
       setValue("occupation", user.occupation || "");
@@ -139,12 +146,28 @@ const MyProfile = () => {
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
-                <label className="block mb-2 dark:text-white">Name</label>
+                <label className="block mb-2 dark:text-white">
+                  Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   {...register("name")}
-                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md"
+                  maxLength={50}
+                  placeholder="Enter your full name"
+                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onInput={(e) => {
+                    // Block emojis and invalid characters in real-time
+                    const value = e.target.value;
+                    const sanitized = value.replace(/[^\w\s\-']/g, '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]/gu, '');
+                    if (sanitized !== value) {
+                      e.target.value = sanitized;
+                      setValue("name", sanitized, { shouldValidate: true });
+                    }
+                  }}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {watch("name")?.length || 0}/50 characters
+                </p>
                 {errors.name && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.name.message}
@@ -154,13 +177,18 @@ const MyProfile = () => {
 
               <div>
                 <label className="block mb-2 dark:text-white">
-                  Date of Birth
+                  Date of Birth <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   {...register("dateOfBirth")}
-                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md"
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
+                  min={new Date(new Date().setFullYear(new Date().getFullYear() - 120)).toISOString().split('T')[0]}
+                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Must be between 13 and 120 years old
+                </p>
                 {errors.dateOfBirth && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.dateOfBirth.message}
@@ -170,14 +198,25 @@ const MyProfile = () => {
 
               <div>
                 <label className="block mb-2 dark:text-white">
-                  Phone Number
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
                   {...register("phoneNumber")}
-                  placeholder="10 digit phone number"
-                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md"
+                  placeholder="Enter 10-digit phone number"
+                  maxLength={10}
+                  inputMode="numeric"
+                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onInput={(e) => {
+                    // Only allow numbers
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    e.target.value = value;
+                    setValue("phoneNumber", value, { shouldValidate: true });
+                  }}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter 10 digits only (e.g., 9876543210)
+                </p>
                 {errors.phoneNumber && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.phoneNumber.message}
@@ -190,8 +229,22 @@ const MyProfile = () => {
                 <input
                   type="text"
                   {...register("occupation")}
-                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md"
+                  maxLength={100}
+                  placeholder="Enter your occupation"
+                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onInput={(e) => {
+                    // Block emojis in real-time
+                    const value = e.target.value;
+                    const sanitized = value.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]/gu, '');
+                    if (sanitized !== value) {
+                      e.target.value = sanitized;
+                      setValue("occupation", sanitized, { shouldValidate: true });
+                    }
+                  }}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {watch("occupation")?.length || 0}/100 characters (optional)
+                </p>
                 {errors.occupation && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.occupation.message}
@@ -203,9 +256,23 @@ const MyProfile = () => {
                 <label className="block mb-2 dark:text-white">Bio</label>
                 <textarea
                   {...register("bio")}
-                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md"
+                  maxLength={500}
+                  placeholder="Tell us about yourself..."
+                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                   rows="4"
+                  onInput={(e) => {
+                    // Block emojis in real-time
+                    const value = e.target.value;
+                    const sanitized = value.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]/gu, '');
+                    if (sanitized !== value) {
+                      e.target.value = sanitized;
+                      setValue("bio", sanitized, { shouldValidate: true });
+                    }
+                  }}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {watch("bio")?.length || 0}/500 characters (optional)
+                </p>
                 {errors.bio && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.bio.message}

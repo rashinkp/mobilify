@@ -80,8 +80,13 @@ const OrderSchema = new mongoose.Schema(
         ],
         required: true,
       },
+      price: { type: Number, required: true, default: 0 },
       time: { type: String, required: true },
       trackingNumber: { type: String, trim: true },
+    },
+    shippingCost: {
+      type: Number,
+      default: 0,
     },
 
     paymentMethod: {
