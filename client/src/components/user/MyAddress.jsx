@@ -47,7 +47,7 @@ const MyAddress = () => {
   const handleAddAddress = async (data) => {
     console.log("Form Submitted:", data);
     try {
-      await addAddress({ data, userId });
+      await addAddress(data);
       successToast("Address added successfully");
     } catch (error) {
       errorToast(

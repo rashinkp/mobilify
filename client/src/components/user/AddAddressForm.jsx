@@ -39,6 +39,7 @@ const AddAddressForm = ({ onSubmit, onCancel, validationSchema }) => {
             {...field}
             type="text"
             placeholder="Label (Home, Work, etc.)"
+            maxLength={50}
             className="w-full dark:bg-slate-800 dark:border-none p-2 border rounded-md mb-2"
           />
         )}
@@ -53,6 +54,7 @@ const AddAddressForm = ({ onSubmit, onCancel, validationSchema }) => {
             {...field}
             type="text"
             placeholder="Street"
+            maxLength={200}
             className="w-full dark:bg-slate-800 dark:border-none p-2 border rounded-md mb-2"
           />
         )}
@@ -67,6 +69,7 @@ const AddAddressForm = ({ onSubmit, onCancel, validationSchema }) => {
             {...field}
             type="text"
             placeholder="City"
+            maxLength={100}
             className="w-full dark:bg-slate-800 dark:border-none p-2 border rounded-md mb-2"
           />
         )}
@@ -81,6 +84,7 @@ const AddAddressForm = ({ onSubmit, onCancel, validationSchema }) => {
             {...field}
             type="text"
             placeholder="State"
+            maxLength={100}
             className="w-full dark:bg-slate-800 dark:border-none p-2 border rounded-md mb-2"
           />
         )}
@@ -94,8 +98,16 @@ const AddAddressForm = ({ onSubmit, onCancel, validationSchema }) => {
           <input
             {...field}
             type="text"
-            placeholder="Postal Code"
+            placeholder="Pincode (6 digits)"
+            maxLength={6}
+            pattern="[0-9]{6}"
+            inputMode="numeric"
             className="w-full dark:bg-slate-800 dark:border-none p-2 border rounded-md mb-2"
+            onChange={(e) => {
+              // Only allow numbers
+              const value = e.target.value.replace(/\D/g, '');
+              field.onChange(value);
+            }}
           />
         )}
       />
@@ -111,6 +123,7 @@ const AddAddressForm = ({ onSubmit, onCancel, validationSchema }) => {
             {...field}
             type="text"
             placeholder="Country"
+            maxLength={100}
             className="w-full dark:bg-slate-800 dark:border-none p-2 border rounded-md mb-2"
           />
         )}

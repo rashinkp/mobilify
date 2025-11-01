@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router";
 import { errorToast, successToast } from "../components/toast";
+import { retry } from "@reduxjs/toolkit/query";
 
 export const useRazorpay = (verifyPayment, placeOrder) => {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export const useRazorpay = (verifyPayment, placeOrder) => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_K5otU6Q5C8lSi8",
         amount: razorpayOrderData.total * 100,
         currency: "INR",
+        retry:false,
         order_id: razorpayOrderData.orderNumber,
         handler: (response) =>
           handleRazorpaySuccess(razorpayOrderData, response),

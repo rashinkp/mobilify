@@ -32,6 +32,7 @@ const WalletDashboard = () => {
       key: "rzp_test_K5otU6Q5C8lSi8",
       amount: amount * 100,
       currency: "INR",
+      retry:false,
       name: "Mobilify",
       description: "Wallet Recharge",
       handler: async function (response) {
@@ -75,14 +76,32 @@ const WalletDashboard = () => {
     razorpay.open();
   };
 
+  // Wallet limits
+  const MIN_AMOUNT = 100;
+  const MAX_AMOUNT = 100000;
+
   const handleAddFunds = async () => {
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+    const numericAmount = parseFloat(amount);
+
+    if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       errorToast("Please enter a valid amount");
       return;
     }
 
+    // Validate minimum amount
+    if (numericAmount < MIN_AMOUNT) {
+      errorToast(`Minimum amount to add is ₹${MIN_AMOUNT.toLocaleString("en-IN")}`);
+      return;
+    }
+
+    // Validate maximum amount
+    if (numericAmount > MAX_AMOUNT) {
+      errorToast(`Maximum amount to add is ₹${MAX_AMOUNT.toLocaleString("en-IN")}`);
+      return;
+    }
+
     try {
-      handlePayment(parseFloat(amount));
+      handlePayment(numericAmount);
     } catch (error) {
       errorToast("Error initiating payment");
       console.error("Payment initiation error:", error);
@@ -174,30 +193,45 @@ const WalletDashboard = () => {
             </h3>
             <div className="mt-4">
               {showAddFunds ? (
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                    className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddFunds}
-                      className="flex-1 sm:flex-none px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                      Add
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAddFunds(false);
-                        setAmount("");
-                      }}
-                      className="flex-1 sm:flex-none px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                      Cancel
-                    </button>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-grow">
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Only allow positive numbers
+                          if (value === "" || (!isNaN(value) && parseFloat(value) >= 0)) {
+                            setAmount(value);
+                          }
+                        }}
+                        placeholder="Enter amount"
+                        min={MIN_AMOUNT}
+                        max={MAX_AMOUNT}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Amount limit: ₹{MIN_AMOUNT.toLocaleString("en-IN")} - ₹{MAX_AMOUNT.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAddFunds}
+                        className="flex-1 sm:flex-none px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAddFunds(false);
+                          setAmount("");
+                        }}
+                        className="flex-1 sm:flex-none px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (

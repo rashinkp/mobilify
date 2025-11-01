@@ -14,8 +14,7 @@ import { userLogout } from "../redux/slices/authUser.js";
 import { successToast } from "./toast/index.js";
 import { googleLogout } from "@react-oauth/google";
 import { RotatingLines } from "react-loader-spinner";
-import noImage from "../assets/noImage.png";
-import { Heart, ShoppingCart, SunMoon } from "lucide-react";
+import { Heart, ShoppingCart, User } from "lucide-react";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -186,11 +185,11 @@ const Navbar = () => {
         <div className="hidden lg:flex items-center gap-4 lg:gap-6">
           <div className="flex space-x-4 items-center">
             <Link to="/wishlist" className="relative">
-              <Heart className="text-black dark:text-white" size={30} />
+              <Heart className="text-black dark:text-white" />
             </Link>
 
             <Link to="/cart" className="relative">
-              <ShoppingCart className="text-black dark:text-white" size={30} />
+              <ShoppingCart className="text-black dark:text-white" />
               <div className="absolute -top-2 -right-2 w-5 h-5 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                 {cartCount}
               </div>
@@ -201,14 +200,18 @@ const Navbar = () => {
             <div
               ref={profileButtonRef}
               onClick={handleProfileToggle}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1"
             >
               <div className="w-8 h-8 bg-lightBackground rounded-full overflow-hidden">
-                <img
-                  src={picture?.secure_url || noImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
+                {picture?.secure_url ? (
+                  <img
+                    src={picture?.secure_url}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User />
+                )}
               </div>
               <FontAwesomeIcon
                 icon={faChevronDown}

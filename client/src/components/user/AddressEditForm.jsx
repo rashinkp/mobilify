@@ -8,12 +8,22 @@ const AddressEditForm = ({ address, onClose }) => {
   const [editAddress] = useUpdateAddressMutation();
   const addressFields = [
     {
+      name: "label",
+      label: "Label",
+      type: "text",
+      placeholder: "Enter label (e.g., Home, Work)",
+      required: true,
+      defaultValue: address?.label || "",
+      maxLength: 50,
+    },
+    {
       name: "street",
       label: "Street",
       type: "text",
-      placeholder: "Enter street",
+      placeholder: "Enter street address",
       required: true,
       defaultValue: address?.street || "",
+      maxLength: 200,
     },
     {
       name: "city",
@@ -22,6 +32,7 @@ const AddressEditForm = ({ address, onClose }) => {
       placeholder: "Enter city",
       required: true,
       defaultValue: address?.city || "",
+      maxLength: 100,
     },
     {
       name: "state",
@@ -30,14 +41,18 @@ const AddressEditForm = ({ address, onClose }) => {
       placeholder: "Enter state",
       required: true,
       defaultValue: address?.state || "",
+      maxLength: 100,
     },
     {
       name: "postalCode",
-      label: "Postal Code",
+      label: "Pincode",
       type: "text",
-      placeholder: "Enter postal code",
+      placeholder: "Enter 6-digit pincode",
       required: true,
       defaultValue: address?.postalCode || "",
+      maxLength: 6,
+      pattern: "[0-9]{6}",
+      inputMode: "numeric",
     },
     {
       name: "country",
@@ -46,14 +61,7 @@ const AddressEditForm = ({ address, onClose }) => {
       placeholder: "Enter country",
       required: true,
       defaultValue: address?.country || "",
-    },
-    {
-      name: "label",
-      label: "Label",
-      type: "text",
-      placeholder: "Enter label (e.g., Home, Work)",
-      required: false,
-      defaultValue: address?.label || "",
+      maxLength: 100,
     },
   ];
 
@@ -79,20 +87,41 @@ const AddressEditForm = ({ address, onClose }) => {
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md overflow-auto "
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto p-4"
         onClick={handleOverlayClick}
       >
         <div
-          className="p-6 w-full max-w-lg rounded-lg shadow-lg"
+          className="relative bg-white dark:bg-gray-800 w-full max-w-lg rounded-xl shadow-2xl my-8 border border-gray-200 dark:border-gray-700"
           onClick={(e) => e.stopPropagation()}
         >
-          <Form
-            title="Edit Address"
-            fields={addressFields}
-            onSubmit={handleSubmit}
-            buttonText="Submit"
-            validationRules={addressValidationSchema}
-          />
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 bg-white dark:bg-gray-800 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="Close modal"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <div className="p-6 sm:p-8">
+            <Form
+              title="Edit Address"
+              fields={addressFields}
+              onSubmit={handleSubmit}
+              buttonText="Update Address"
+              validationRules={addressValidationSchema}
+            />
+          </div>
         </div>
       </div>
     </>
