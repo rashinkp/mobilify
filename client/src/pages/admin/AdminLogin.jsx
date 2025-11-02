@@ -30,39 +30,28 @@ const AdminLogin = () => {
     },
   ];
 
-  const extraLinks = [
-    {
-      linkText: "Forgot password?",
-      path: "/admin/forgot-password",
-    },
-  ];
-
-  
-
-  
   //api handling
 
   const [login, { isLoading }] = useAdminLoginMutation();
 
-  const { adminInfo } = useSelector((state) => state.adminAuth)
-
+  const { adminInfo } = useSelector((state) => state.adminAuth);
 
   useEffect(() => {
     if (adminInfo) {
-      navigate('/admin');
+      navigate("/admin");
     }
-  }, [navigate, adminInfo])
-  
-    const handleAdminAuth = async ({email , password}) => {
-      try {
-        const res = await login({ email, password }).unwrap();
-        dispatch(adminLogin({ ...res }));
-        successToast('Login Successfull');
-        navigate('/admin')
-      } catch (err) {
-        errorToast(err?.data?.message || err.message || err.error);
-      }
-    };
+  }, [navigate, adminInfo]);
+
+  const handleAdminAuth = async ({ email, password }) => {
+    try {
+      const res = await login({ email, password }).unwrap();
+      dispatch(adminLogin({ ...res }));
+      successToast("Login Successfull");
+      navigate("/admin");
+    } catch (err) {
+      errorToast(err?.data?.message || err.message || err.error);
+    }
+  };
 
   return (
     <>
@@ -70,7 +59,6 @@ const AdminLogin = () => {
         <Form
           title="Admin Login"
           fields={formField}
-          extraLinks={extraLinks}
           onSubmit={handleAdminAuth}
           buttonText="Login"
           validationRules={loginValidationSchema}

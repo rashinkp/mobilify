@@ -352,6 +352,8 @@ export const updateOrderStatus = async (req, res) => {
       orderId,
       paymentId,
       orderData,
+      cancellationReason = "",
+      returnReason = "",
     } = req.body;
 
     const { userId } = req.user;
@@ -397,7 +399,17 @@ export const updateOrderStatus = async (req, res) => {
     order.paymentId = paymentId || order.paymentId;
 
     if (order.status === "Delivered") {
-      order.paymentStatus = "Successful";
+      // For COD orders, automatically set payment status to Successful on delivery
+      if (order.paymentMethod === "Cash On Delivery") {
+        order.paymentStatus = "Successful";
+      }
+      // For online payments, keep existing payment status (managed by payment gateway)
+      // Only update to Successful if it was already Successful or Pending
+      else if (order.paymentStatus === "Pending" && previousPaymentStatus !== "Successful") {
+        // Keep as is for online payments - payment gateway manages this
+        // Don't auto-update online payment status
+      }
+      
       order.deliveryDate = new Date(); 
       if (order.returnPolicy) {
         let currentDate = new Date();
@@ -415,6 +427,14 @@ export const updateOrderStatus = async (req, res) => {
       previousStatus !== "Cancelled" &&
       previousStatus !== "Returned"
     ) {
+      // Store cancellation or return reason
+      if (newStatus === "Cancelled" && cancellationReason) {
+        order.cancellationReason = cancellationReason.trim();
+      }
+      if (newStatus === "Returned" && returnReason) {
+        order.returnReason = returnReason.trim();
+      }
+      
       await restoreStock(order);
     }
 

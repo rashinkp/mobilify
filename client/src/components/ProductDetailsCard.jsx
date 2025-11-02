@@ -31,7 +31,7 @@ const ProductDetails = () => {
   const { userInfo } = useSelector((state) => state.userAuth);
 
   useEffect(() => {
-    setMainImage(product?.images[0]?.secure_url);
+    setMainImage(product?.images?.[0]?.secure_url || product?.imageUrl || "");
   }, [product]);
 
   const finalPrice = () => {
@@ -126,27 +126,29 @@ const ProductDetails = () => {
                     onFavClick={handleFavClick}
                   />
                 </div>
-                <div className="grid grid-cols-5 gap-3 mt-4">
-                  {product.images.map((thumb, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setMainImage(thumb.secure_url)}
-                      className={`relative aspect-square rounded-lg overflow-hidden
-                        ${
-                          mainImage === thumb.secure_url
-                            ? "ring-2 ring-indigo-500"
-                            : "ring-1 ring-gray-200 dark:ring-gray-700"
-                        }
-                        hover:ring-2 hover:ring-indigo-400 transition-all`}
-                    >
-                      <img
-                        src={thumb.secure_url || noImage}
-                        alt=""
-                        className="object-cover w-full h-full"
-                      />
-                    </button>
-                  ))}
-                </div>
+                {product?.images && product.images.length > 0 && (
+                  <div className="grid grid-cols-5 gap-3 mt-4">
+                    {product.images.map((thumb, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setMainImage(thumb.secure_url)}
+                        className={`relative aspect-square rounded-lg overflow-hidden
+                          ${
+                            mainImage === thumb.secure_url
+                              ? "ring-2 ring-indigo-500"
+                              : "ring-1 ring-gray-200 dark:ring-gray-700"
+                          }
+                          hover:ring-2 hover:ring-indigo-400 transition-all`}
+                      >
+                        <img
+                          src={thumb.secure_url || noImage}
+                          alt=""
+                          className="object-cover w-full h-full"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Right: Details Section */}

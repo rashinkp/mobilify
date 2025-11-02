@@ -266,21 +266,25 @@ const ProductManagement = () => {
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                 Product Images
               </h2>
-              <div className="grid grid-cols-2 gap-4">
-                {product.images.slice(0, 4).map((image, index) => (
-                  <div
-                    key={index}
-                    className="relative group overflow-hidden rounded-lg"
-                  >
-                    <img
-                      src={image.secure_url || noImage}
-                      alt=""
-                      className="mx-auto w-40 h-40 object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity" />
-                  </div>
-                ))}
-              </div>
+              {product?.images && product.images.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {product.images.slice(0, 4).map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative group overflow-hidden rounded-lg"
+                    >
+                      <img
+                        src={image.secure_url || noImage}
+                        alt=""
+                        className="mx-auto w-40 h-40 object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">No images available</p>
+              )}
             </div>
 
             {/* Description */}

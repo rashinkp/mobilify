@@ -173,15 +173,21 @@ const OrderListingPage = () => {
               {/* Order content remains the same... */}
               <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                 {/* Product Image */}
-                <div className="w-24 h-24 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
-                  <img
-                    src={order.imageUrl}
-                    alt={order.name}
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.target.src = "/placeholder-image.png";
-                    }}
-                  />
+                <div className="w-24 h-24 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden flex items-center justify-center">
+                  {order.imageUrl ? (
+                    <img
+                      src={order.imageUrl}
+                      alt={order.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xs text-gray-400 dark:text-gray-500 text-center px-2">
+                      Image not available
+                    </span>
+                  )}
                 </div>
 
                 {/* Order Details */}

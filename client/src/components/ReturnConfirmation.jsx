@@ -1,21 +1,22 @@
 import { AlertTriangle } from 'lucide-react';
 import React, { useState } from 'react'
 
-const CancelConfirmation = ({
-  handleCancelOrder,
-  setShowCancelConfirmation,
+const ReturnConfirmation = ({
+  handleReturn,
+  setConfirmReturn,
 }) => {
   const [reason, setReason] = useState('');
   const [selectedReason, setSelectedReason] = useState('');
 
-  const cancellationReasons = [
+  const returnReasons = [
+    'Defective product',
+    'Wrong product received',
+    'Product not as described',
+    'Damaged during shipping',
+    'Size/Model not fitting',
     'Changed my mind',
-    'Found better price elsewhere',
-    'Item no longer needed',
-    'Ordered by mistake',
-    'Product specifications not matching',
-    'Shipping time too long',
-    'Payment issue',
+    'Found better alternative',
+    'Product quality issues',
     'Other'
   ];
 
@@ -24,7 +25,7 @@ const CancelConfirmation = ({
     if (!finalReason.trim()) {
       return; // Prevent submission without reason
     }
-    handleCancelOrder(finalReason.trim());
+    handleReturn(finalReason.trim());
   };
 
   return (
@@ -32,15 +33,15 @@ const CancelConfirmation = ({
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
         <div className="flex items-center mb-4 text-yellow-500">
           <AlertTriangle className="mr-3 w-6 h-6" />
-          <h3 className="text-xl font-bold dark:text-white">Cancel Order?</h3>
+          <h3 className="text-xl font-bold dark:text-white">Return Order?</h3>
         </div>
         <p className="mb-4 dark:text-gray-300">
-          Are you sure you want to cancel this order? Please provide a reason for cancellation.
+          Are you sure you want to return this order? Please provide a reason for return.
         </p>
         
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-            Reason for cancellation <span className="text-red-500">*</span>
+            Reason for return <span className="text-red-500">*</span>
           </label>
           <select
             value={selectedReason}
@@ -48,7 +49,7 @@ const CancelConfirmation = ({
             className="w-full px-3 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">Select a reason</option>
-            {cancellationReasons.map((reasonOption) => (
+            {returnReasons.map((reasonOption) => (
               <option key={reasonOption} value={reasonOption}>
                 {reasonOption}
               </option>
@@ -78,7 +79,7 @@ const CancelConfirmation = ({
         <div className="flex justify-end space-x-4">
           <button
             onClick={() => {
-              setShowCancelConfirmation(false);
+              setConfirmReturn(false);
               setSelectedReason('');
               setReason('');
             }}
@@ -91,7 +92,7 @@ const CancelConfirmation = ({
             disabled={!selectedReason || (selectedReason === 'Other' && !reason.trim())}
             className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Yes, Cancel Order
+            Yes, Return Order
           </button>
         </div>
       </div>
@@ -99,4 +100,5 @@ const CancelConfirmation = ({
   );
 };
 
-export default CancelConfirmation
+export default ReturnConfirmation
+

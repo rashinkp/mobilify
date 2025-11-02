@@ -8,9 +8,12 @@ import { useGetCartCountQuery } from "./redux/slices/cartApiSlice";
 
 const App = () => {
   const theme = useSelector((state) => state.theme.theme);
+  const { userInfo } = useSelector((state) => state.userAuth);
 
-  const { data = {}, isLoading, isError, refetch,error } = useGetCartCountQuery()
-  
+  // Only fetch cart count when user is logged in
+  const { data = {}, isLoading, isError, refetch, error } = useGetCartCountQuery(undefined, {
+    skip: !userInfo,
+  });
 
   const dispatch = useDispatch();
   useEffect(() => {
@@ -24,19 +27,31 @@ const App = () => {
 
 
   useEffect(() => {
+    // Reset cart count when user logs out
+    if (!userInfo) {
+      dispatch(setCartCount(0));
+      return;
+    }
+
     if (isLoading) {
       return;
     }
 
     if (isError) {
-      console.error(error);
+      // Silently handle 401 errors (user not authenticated)
+      if (error?.status !== 401) {
+        console.error("Error fetching cart count:", error);
+      }
+      dispatch(setCartCount(0));
       return;
     }
 
     if (data && data.totalQuantity !== undefined) {
       dispatch(setCartCount(data.totalQuantity));
+    } else {
+      dispatch(setCartCount(0));
     }
-  }, [data, isLoading, isError, dispatch]);
+  }, [data, isLoading, isError, dispatch, userInfo, error]);
 
 
   return (

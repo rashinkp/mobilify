@@ -28,9 +28,8 @@ import {
 import { Link, useNavigate, useParams } from "react-router";
 import { RotatingLines } from "react-loader-spinner";
 import { errorToast, successToast } from "../../components/toast";
-import { useGetProductQuery } from "../../redux/slices/productApiSlice";
 import CancelConfirmation from "../../components/CancelConfirmation.jsx";
-import jsPDF from "jspdf";
+import ReturnConfirmation from "../../components/ReturnConfirmation.jsx";
 import { handleDownloadInvoice } from "../../script/downloadInvoice.js";
 import PriceBreakdown from "../../components/Billing";
 import { useVerifyPaymentMutation } from "../../redux/slices/paymentApiSlice";
@@ -118,16 +117,13 @@ const OrderDetailsPage = () => {
     orderStageMapper[order.status] || orderStageMapper["Pending"];
 
   // Handler for cancel order
-  const handleCancelOrder = async () => {
+  const handleCancelOrder = async (cancellationReason) => {
     try {
-      await changeStatus({ newStatus: "Cancelled", orderId }).unwrap();
-
-      // Update the local state after successful API call
-      // setOrderItems((prevItems) =>
-      //   prevItems.map((item) =>
-      //     item.id === productId ? { ...item, status: newStatus } : item
-      //   )
-      // );
+      await changeStatus({ 
+        newStatus: "Cancelled", 
+        orderId,
+        cancellationReason 
+      }).unwrap();
 
       successToast("Order cancelled successfully");
     } catch (error) {
@@ -142,9 +138,13 @@ const OrderDetailsPage = () => {
     }
   };
 
-  const handleReturn = async () => {
+  const handleReturn = async (returnReason) => {
     try {
-      await changeStatus({ newStatus: "Returned", orderId }).unwrap();
+      await changeStatus({ 
+        newStatus: "Returned", 
+        orderId,
+        returnReason 
+      }).unwrap();
       successToast("Order returned successfully");
     } catch (error) {
       errorToast(
@@ -295,34 +295,10 @@ const OrderDetailsPage = () => {
       </div>
 
       {confirmReturn && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center mb-4 text-yellow-500">
-              <Recycle className="mr-3 w-6 h-6" />
-              <h3 className="text-xl font-bold dark:text-white">
-                Return Order?
-              </h3>
-            </div>
-            <p className="mb-4 dark:text-gray-300">
-              Are you sure you want to return this order? This action cannot be
-              undone.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setConfirmReturn(false)}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-600 dark:text-white rounded-md hover:bg-gray-300"
-              >
-                No, Keep Order
-              </button>
-              <button
-                onClick={handleReturn}
-                className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-              >
-                Yes, Return Order
-              </button>
-            </div>
-          </div>
-        </div>
+        <ReturnConfirmation
+          handleReturn={handleReturn}
+          setConfirmReturn={setConfirmReturn}
+        />
       )}
       <div className="pt-20 container mx-auto p-6 min-h-screen">
         <div className="mx-auto bg-white dark:bg-transparent dark:text-white   ">
@@ -584,6 +560,30 @@ const OrderDetailsPage = () => {
                       -₹{order.couponApplied.offerAmount.toFixed(2)}
                     </span>
                   </div>
+                </div>
+              )}
+
+              {order.cancellationReason && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <X className="mr-2 w-5 h-5 text-red-600" />
+                    <h4 className="font-semibold text-red-800 dark:text-red-300">Cancellation Reason</h4>
+                  </div>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-2">
+                    {order.cancellationReason}
+                  </p>
+                </div>
+              )}
+
+              {order.returnReason && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <Recycle className="mr-2 w-5 h-5 text-yellow-600" />
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-300">Return Reason</h4>
+                  </div>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-2">
+                    {order.returnReason}
+                  </p>
                 </div>
               )}
             </div>

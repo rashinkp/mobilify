@@ -37,11 +37,17 @@ const OrderSummary = ({ products }) => {
           >
             {/* Product Info */}
             <div className="flex items-center space-x-4 w-full">
-              <img
-                src={product?.productDetails?.images[0]?.secure_url}
-                alt={product?.productDetails?.name}
-                className="w-16 h-16 object-cover"
-              />
+              {product?.productDetails?.images?.[0]?.secure_url || product?.productDetails?.imageUrl ? (
+                <img
+                  src={product?.productDetails?.images?.[0]?.secure_url || product?.productDetails?.imageUrl}
+                  alt={product?.productDetails?.name}
+                  className="w-16 h-16 object-cover rounded"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 text-center px-1">No image</span>
+                </div>
+              )}
               <div className="flex-1">
                 <h3 className="font-semibold">
                   {product?.productDetails?.name}

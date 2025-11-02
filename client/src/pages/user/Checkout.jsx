@@ -272,7 +272,7 @@ const CheckoutPage = () => {
         offerPrice:
           product?.productDetails.price - finalPrice(product?.productDetails),
         quantity: product.quantity,
-        imageUrl: product?.productDetails?.images[0]?.url,
+        imageUrl: product?.productDetails?.images?.[0]?.url || product?.productDetails?.imageUrl || "",
         returnPolicy: product?.productDetails?.returnPolicy,
         coupon:
           appliedCoupon?.productDetails?.productId ===

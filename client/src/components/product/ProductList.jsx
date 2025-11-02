@@ -15,7 +15,7 @@ const ProductList = ({ products }) => {
       label: "Image",
       render: (img) => (
         <img
-          src={img[0]?.secure_url || noImage}
+          src={img?.[0]?.secure_url || noImage}
           alt="Product"
           className="w-12 h-12 rounded-full object-cover"
         />

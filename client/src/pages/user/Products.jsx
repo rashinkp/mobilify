@@ -12,6 +12,7 @@ import {
   ListFilter,
   Search,
   SortAsc,
+  Package,
 } from "lucide-react";
 import { RotatingLines } from "react-loader-spinner";
 
@@ -117,20 +118,26 @@ const Products = () => {
               {/* Filters Group */}
               <div className="flex flex-wrap gap-3 items-center">
                 {/* Category Filter */}
-
                 <ListFilter className="w-4 h-4 text-gray-400" />
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 
                         bg-white dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500"
+                  disabled={!categories || categories.length === 0}
                 >
                   <option value="">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
+                  {categories && categories.length > 0 ? (
+                    categories.map((cat) => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No Categories Available
                     </option>
-                  ))}
+                  )}
                 </select>
 
                 {/* Sort Options */}
@@ -155,24 +162,54 @@ const Products = () => {
           </section>
 
           {/* Products Grid */}
-          <section className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 5xl:grid-cols-5 justify-center px-4">
-            {products.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                refetch={refetch}
-              />
-            ))}
-          </section>
+          {products.length > 0 ? (
+            <>
+              <section className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 5xl:grid-cols-5 justify-center px-4">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    refetch={refetch}
+                  />
+                ))}
+              </section>
 
-          {/* Pagination */}
-          <section className="mt-12 flex justify-center">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </section>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <section className="mt-12 flex justify-center">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </section>
+              )}
+            </>
+          ) : (
+            <section className="flex flex-col items-center justify-center py-20 px-4 min-h-[400px]">
+              <Package className="w-24 h-24 text-gray-300 dark:text-gray-600 mb-4" />
+              <p className="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                No Products Found
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
+                {searchTerm || categoryFilter
+                  ? "Try adjusting your filters or search term to find more products."
+                  : "We're currently updating our collection. Check back soon for exciting new products!"}
+              </p>
+              {(searchTerm || categoryFilter) && (
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCategoryFilter("");
+                    setCurrentPage(1);
+                  }}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </section>
+          )}
         </main>
 
         {/* Footer */}

@@ -60,15 +60,18 @@ const Review = () => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                      <img
-                        src={
-                          review?.userInfo?.profilePicture ||
-                          "/api/placeholder/48/48"
-                        }
-                        alt={review?.userInfo?.name}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+                      {review?.userInfo?.profilePicture ? (
+                        <img
+                          src={review.userInfo.profilePicture}
+                          alt={review?.userInfo?.name || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-500 dark:text-gray-400 font-semibold">
+                          {review?.userInfo?.name?.[0]?.toUpperCase() || "U"}
+                        </span>
+                      )}
                     </div>
 
                     <div>

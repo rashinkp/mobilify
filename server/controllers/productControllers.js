@@ -302,12 +302,31 @@ export const updateProduct = asyncHandler(async (req, res) => {
 
 export const updateImages = asyncHandler(async (req, res) => {
   const productId = req.params.id;
-  const { uploadedUrl: images, deleteQueue } = req.body;
+  const { uploadedImages, deleteQueue, uploadedUrl } = req.body;
 
-  if (!Array.isArray(images)) {
-    return res
-      .status(400)
-      .json({ error: "Invalid data format. Expected an array of images." });
+  console.log("Received update request:", {
+    productId,
+    uploadedImagesCount: uploadedImages?.length || 0,
+    deleteQueueCount: deleteQueue?.length || 0,
+    uploadedUrlCount: uploadedUrl?.length || 0,
+  });
+
+  // Support both old and new format for backward compatibility
+  let imagesToUpdate = [];
+  if (uploadedImages && Array.isArray(uploadedImages)) {
+    imagesToUpdate = uploadedImages;
+  } else if (uploadedUrl && Array.isArray(uploadedUrl)) {
+    imagesToUpdate = uploadedUrl.map((img, idx) => ({ index: idx, imageData: img }));
+  }
+
+  // Validate that we have either updates or deletions
+  const hasUpdates = imagesToUpdate.length > 0;
+  const hasDeletions = deleteQueue && Array.isArray(deleteQueue) && deleteQueue.length > 0;
+
+  if (!hasUpdates && !hasDeletions) {
+    return res.status(400).json({
+      error: "No image updates or deletions provided. Please upload at least one image or delete an existing image.",
+    });
   }
 
   try {
@@ -318,23 +337,85 @@ export const updateImages = asyncHandler(async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // Handle the delete queue
+    // Initialize images array to ensure it exists
+    if (!product.images) {
+      product.images = [];
+    }
+
+    // Create a working copy that maintains slot positions (0-3)
+    // Pad with null to handle sparse arrays from database
+    const currentImages = [...product.images];
+    while (currentImages.length < 4) {
+      currentImages.push(null);
+    }
+
+    // Track which images to delete from Cloudinary
+    const imagesToDeleteFromCloudinary = [];
+
+    // Handle the delete queue - mark slots as null and track for Cloudinary deletion
     if (deleteQueue && Array.isArray(deleteQueue)) {
       for (const index of deleteQueue) {
-        const imageToDelete = product.images[index];
-        if (imageToDelete) {
-          // Delete the image from Cloudinary
-          const publicId = imageToDelete.public_id;
-          await cloudinary.uploader.destroy(publicId);
-
-          // Remove the image from the product
-          product.images.splice(index, 1);
+        if (index >= 0 && index < 4) {
+          const imageToDelete = currentImages[index];
+          if (imageToDelete && imageToDelete.public_id) {
+            imagesToDeleteFromCloudinary.push(imageToDelete.public_id);
+          }
+          // Mark slot as empty
+          currentImages[index] = null;
         }
       }
     }
 
-    // Add new images
-    product.images.push(...images);
+    // Handle new image uploads - replace images at specific slot positions
+    for (const { index, imageData } of imagesToUpdate) {
+      if (index >= 0 && index < 4) {
+        // Validate imageData format
+        if (!imageData || !imageData.secure_url || !imageData.public_id) {
+          return res.status(400).json({
+            error: `Invalid image data at slot ${index}. Missing secure_url or public_id.`,
+          });
+        }
+
+        // If there's an existing image at this slot, delete it from Cloudinary
+        const existingImage = currentImages[index];
+        if (existingImage && existingImage.public_id) {
+          imagesToDeleteFromCloudinary.push(existingImage.public_id);
+        }
+        
+        // Set the new image at the specified slot
+        currentImages[index] = imageData;
+      }
+    }
+
+    // Delete old images from Cloudinary
+    for (const publicId of imagesToDeleteFromCloudinary) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cloudinaryError) {
+        console.error(`Failed to delete image from Cloudinary: ${cloudinaryError.message}`);
+      }
+    }
+
+    // Filter out null values to create final array (MongoDB doesn't store nulls well)
+    // But maintain the order - this means if slot 0 has image and slot 2 has image,
+    // they will be at indices 0 and 1 in the final array
+    product.images = currentImages.filter(img => img !== null && img !== undefined);
+
+    // Ensure we don't exceed 4 images
+    if (product.images.length > 4) {
+      // Delete excess images from Cloudinary and keep only first 4
+      const imagesToRemove = product.images.slice(4);
+      for (const img of imagesToRemove) {
+        if (img && img.public_id) {
+          try {
+            await cloudinary.uploader.destroy(img.public_id);
+          } catch (cloudinaryError) {
+            console.error(`Failed to delete excess image from Cloudinary: ${cloudinaryError.message}`);
+          }
+        }
+      }
+      product.images = product.images.slice(0, 4);
+    }
 
     // Save the updated product
     const updatedProduct = await product.save();
