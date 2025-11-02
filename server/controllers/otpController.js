@@ -8,13 +8,16 @@ export const sendOTP = async (req, res) => {
     const { email, name, password } = req.body;
 
     const checkUserPresent = await User.findOne({ email });
-    if (checkUserPresent) {
+    
+    // If user exists and is verified, they should login instead
+    if (checkUserPresent && checkUserPresent.isVerified) {
       return res.status(401).json({
         success: false,
-        message: "User is already registered",
+        message: "User is already registered. Please login instead.",
       });
     }
 
+    // Generate new OTP
     let otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,
@@ -35,18 +38,38 @@ export const sendOTP = async (req, res) => {
 
     const otpId = otpBody._id;
 
+    let user;
+    let userId;
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      otpId,
-      isBlocked: true,
-    });
+    // If user exists but is not verified, update their info and OTP
+    if (checkUserPresent && !checkUserPresent.isVerified) {
+      user = await User.findOneAndUpdate(
+        { email },
+        {
+          $set: {
+            name,
+            password,
+            otpId,
+            isBlocked: true,
+            isVerified: false,
+          },
+        },
+        { new: true }
+      );
+      userId = user._id;
+    } else {
+      // Create new user if they don't exist
+      user = await User.create({
+        name,
+        email,
+        password,
+        otpId,
+        isBlocked: true,
+        isVerified: false,
+      });
+      userId = user._id;
+    }
 
-    const userId = user._id;
-
-    
     res.status(200).json({
       success: true,
       message: "OTP sent successfully",
@@ -62,7 +85,7 @@ export const sendOTP = async (req, res) => {
 
 export const sendOTPToEmail = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, forEmailVerification } = req.body;
 
 
     req.session.email = email;
@@ -73,6 +96,14 @@ export const sendOTPToEmail = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "User does not exist",
+      });
+    }
+
+    // If sending OTP for email verification, check if user is already verified
+    if (forEmailVerification && user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "User is already verified",
       });
     }
 
@@ -171,7 +202,7 @@ export const resendOTP = asyncHandler(async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
   try {
-    const { otp } = req.body;
+    const { otp, isEmailVerification } = req.body;
 
     const otpRecord = await OTP.findOne({ otp });
 
@@ -193,10 +224,20 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
+    if (isEmailVerification && !user.isVerified) {
+      user.isVerified = true;
+      user.isBlocked = false; 
+      await user.save();
+    }
+
     res.status(200).json({
       success: true,
-      message: "OTP verified successfully",
+      message: isEmailVerification 
+        ? "Email verified successfully. You can now login." 
+        : "OTP verified successfully",
       email,
+      userId: user._id,
+      isVerified: user.isVerified,
     });
 
     await OTP.deleteOne({ _id: otpRecord._id });

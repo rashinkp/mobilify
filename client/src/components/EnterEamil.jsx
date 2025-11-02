@@ -51,15 +51,16 @@ const EnterEamil = () => {
 
   return (
     <>
-      <div className="h-[70vh] flex items-center">
-        <Form
-          title="Enter you email"
-          fields={loginFields}
-          onSubmit={handleLogin}
-          buttonText="Next"
-          validationRules={emailForm}
-          
-        />
+      <div className="min-h-screen flex items-center justify-center px-4 py-14">
+        <div className="w-full max-w-md">
+          <Form
+            title="Enter your email"
+            fields={loginFields}
+            onSubmit={handleLogin}
+            buttonText="Next"
+            validationRules={emailForm}
+          />
+        </div>
 
         {isLoading && (
           <div className="h-screen w-full absolute top-0 z-50 left-0 backdrop-blur-sm bg-black/30 flex justify-center items-center">

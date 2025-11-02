@@ -55,14 +55,16 @@ const AdminLogin = () => {
 
   return (
     <>
-      <div className="flex h-screen w-full items-center">
-        <Form
-          title="Admin Login"
-          fields={formField}
-          onSubmit={handleAdminAuth}
-          buttonText="Login"
-          validationRules={loginValidationSchema}
-        />
+      <div className="min-h-screen flex items-center justify-center px-4 py-14">
+        <div className="w-full max-w-md">
+          <Form
+            title="Admin Login"
+            fields={formField}
+            onSubmit={handleAdminAuth}
+            buttonText="Login"
+            validationRules={loginValidationSchema}
+          />
+        </div>
         {isLoading && (
           <div className="h-screen w-full absolute top-0 z-50 left-0 backdrop-blur-sm bg-black/30 flex justify-center items-center">
             <RotatingLines

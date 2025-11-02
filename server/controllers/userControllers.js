@@ -33,7 +33,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOneAndUpdate(
     { _id: id },
-    { $set: { isBlocked: false } },
+    { $set: { isBlocked: false, isVerified: true } },
     { new: true }
   );
 
@@ -131,6 +131,11 @@ export const userLogin = asyncHandler(async (req, res) => {
   
   const user = await User.findOne({ email });
 
+  if (!user) {
+    res.status(401);
+    throw new Error("Invalid email or password");
+  }
+
   //checking if user is blocked or not
 
   if (!user.password) {
@@ -138,7 +143,18 @@ export const userLogin = asyncHandler(async (req, res) => {
   }
   
 
-  if (user && (await user.matchPassword(password))) {
+  if (await user.matchPassword(password)) {
+
+    // Check if user is verified (for OTP-based registration)
+    // Skip verification check for users without password (Google Sign-In users)
+    if (user.password && !user.isVerified) {
+      return res
+        .status(403)
+        .json({ 
+          message: "Please verify your email with OTP before logging in. Check your email for the verification code.",
+          requiresVerification: true 
+        });
+    }
 
     if (user.isBlocked || !user.isActive) {
       return res
@@ -154,9 +170,9 @@ export const userLogin = asyncHandler(async (req, res) => {
       email: user.email,
     });
   } else {
-    res.status(400);
+    res.status(401);
     console.log("Invalid user name or password");
-    throw new Error("Invalid user name or password");
+    throw new Error("Invalid email or password");
   }
 });
 
@@ -181,11 +197,22 @@ export const signWithGoogle = asyncHandler(async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      // Create new user - Google Sign-In users are automatically verified
       user = await User.create({
         email,
         name,
         picture: {secure_url:picture},
+        isVerified: true, // Google Sign-In users are verified via Google
       });
+    } else {
+      // Update existing user to be verified if not already
+      if (!user.isVerified) {
+        user = await User.findOneAndUpdate(
+          { email },
+          { $set: { isVerified: true } },
+          { new: true }
+        );
+      }
     } 
     
      if (user.isBlocked || !user.isActive) {

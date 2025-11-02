@@ -51,14 +51,16 @@ const EnterNewPassword = () => {
 
   return (
     <>
-      <div className="h-[70vh] flex items-center">
-        <Form
-          title="Enter New Password"
-          fields={passwordFields}
-          onSubmit={handlePasswordSubmit}
-          buttonText="Submit"
-          validationRules={passwordSchemaWithoutCurr}
-        />
+      <div className="min-h-screen flex items-center justify-center px-4 py-14">
+        <div className="w-full max-w-md">
+          <Form
+            title="Enter New Password"
+            fields={passwordFields}
+            onSubmit={handlePasswordSubmit}
+            buttonText="Submit"
+            validationRules={passwordSchemaWithoutCurr}
+          />
+        </div>
       </div>
     </>
   );

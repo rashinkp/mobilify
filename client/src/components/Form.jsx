@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Link } from "react-router";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { Eye, EyeOff } from "lucide-react";
 
 const Form = ({
   title,
@@ -11,6 +12,24 @@ const Form = ({
   extraLinks,
   validationRules,
 }) => {
+  // Track password visibility for each password field
+  const [PasswordVisibility, setPasswordVisibility] = useState(() => {
+    const initialState = {};
+    fields.forEach((field) => {
+      if (field.type === "password") {
+        initialState[field.name] = false;
+      }
+    });
+    return initialState;
+  });
+
+  const togglePasswordVisibility = (fieldName) => {
+    setPasswordVisibility((prev) => ({
+      ...prev,
+      [fieldName]: !prev[fieldName],
+    }));
+  };
+
   const {
     control,
     handleSubmit,
@@ -71,6 +90,37 @@ const Form = ({
                   {...controlledField}
                   className="h-4 w-4 text-skyBlue border-gray-300 rounded focus:ring-skyBlue"
                 />
+              ) : field.type === "password" ? (
+                <div className="relative">
+                  <input
+                    type={PasswordVisibility[field.name] ? "text" : "password"}
+                    id={field.name}
+                    placeholder={field.placeholder}
+                    value={controlledField.value}
+                    onBlur={controlledField.onBlur}
+                    name={controlledField.name}
+                    ref={controlledField.ref}
+                    maxLength={field.maxLength}
+                    pattern={field.pattern}
+                    inputMode={field.inputMode}
+                    onChange={(e) => {
+                      controlledField.onChange(e);
+                    }}
+                    className="w-full px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility(field.name)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    tabIndex={-1}
+                  >
+                    {PasswordVisibility[field.name] ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               ) : (
                 <input
                   type={field.type}

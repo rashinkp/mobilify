@@ -120,15 +120,17 @@ const VerifyOtp = () => {
     }
   };
   return (
-    <div className="mt-56">
-      <Form
-        title="Verilfy OTP"
-        fields={formFields}
-        onSubmit={handleSubmit}
-        extraLinks={extraLinks}
-        buttonText="Submit"
-        validationRules={otpValidationSchema}
-      />
+    <div className="min-h-screen flex items-center justify-center px-4 py-14">
+      <div className="w-full max-w-md">
+        <Form
+          title="Verify OTP"
+          fields={formFields}
+          onSubmit={handleSubmit}
+          extraLinks={extraLinks}
+          buttonText="Submit"
+          validationRules={otpValidationSchema}
+        />
+      </div>
     </div>
   );
 };
