@@ -162,13 +162,42 @@ export const applyCoupon = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Product not found" });
   }
 
+  // Validate discount percentage (should be 0-100)
+  if (coupon.discount < 0 || coupon.discount > 100) {
+    return res.status(400).json({ 
+      message: "Invalid coupon discount percentage. Must be between 0 and 100." 
+    });
+  }
+
   // Calculate prices
-  const originalPrice = product.price;
-  const offerPrice = (originalPrice * (100 - product.offerPercent)) / 100;
+  const originalPrice = product.price || 0;
+  
+  // Ensure originalPrice is valid
+  if (originalPrice <= 0) {
+    return res.status(400).json({ message: "Invalid product price" });
+  }
+
+  const offerPrice = (originalPrice * (100 - (product.offerPercent || 0))) / 100;
+  
+  // Validate minAmount and maxAmount constraints
+  if (offerPrice < (coupon.minAmount || 0)) {
+    return res.status(400).json({ 
+      message: `Coupon requires minimum purchase amount of ₹${coupon.minAmount}` 
+    });
+  }
+  
+  if (coupon.maxAmount && offerPrice > coupon.maxAmount) {
+    return res.status(400).json({ 
+      message: `Coupon valid only for amounts up to ₹${coupon.maxAmount}` 
+    });
+  }
 
   // Apply coupon percentage
   const couponDiscount = (offerPrice * coupon.discount) / 100;
-  const finalPriceAfterCoupon = offerPrice - couponDiscount;
+  
+  // Ensure discount doesn't exceed offer price (prevent negative prices)
+  const actualDiscount = Math.min(couponDiscount, offerPrice);
+  const finalPriceAfterCoupon = Math.max(0, offerPrice - actualDiscount);
 
   // Response
   return res.status(200).json({
@@ -179,7 +208,7 @@ export const applyCoupon = asyncHandler(async (req, res) => {
       originalPrice,
       offerPrice,
     },
-    couponDiscount,
+    couponDiscount: actualDiscount,
     finalPriceAfterCoupon,
     couponCode,
     offerPercent: coupon.discount,

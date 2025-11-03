@@ -89,7 +89,8 @@ export const addAmountToWallet = asyncHandler(async (req, res) => {
     paymentId, 
   });
 
-  wallet.balance += Number(amount);
+  // Ensure balance never goes negative (shouldn't happen with positive amounts, but safety check)
+  wallet.balance = Math.max(0, Number(wallet.balance) + Number(amount));
   await wallet.save();
 
   res.status(200).json({
@@ -131,7 +132,15 @@ export const processTransaction = asyncHandler(async (req, res) => {
     }
 
     // Step 2: Deduct balance and save user data
-    wallet.balance -= Number(amount);
+    // Ensure balance never goes negative (extra safety check)
+    const newBalance = Number(wallet.balance) - Number(amount);
+    if (newBalance < 0) {
+      return res.status(400).json({ 
+        message: "Insufficient wallet balance. Transaction would result in negative balance." 
+      });
+    }
+    
+    wallet.balance = newBalance;
     await wallet.save();
 
     // Step 3: Create and save transaction

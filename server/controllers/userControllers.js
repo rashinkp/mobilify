@@ -47,6 +47,10 @@ export const registerUser = asyncHandler(async (req, res) => {
 
     const reward = getRandomAmount();
     
+    // Validate reward is positive
+    if (!reward || reward <= 0) {
+      return res.status(400).json({ message: "Invalid referral reward amount" });
+    }
 
     const referralData = await Referral.create({
       referrer: referredUser._id ,
@@ -68,11 +72,11 @@ export const registerUser = asyncHandler(async (req, res) => {
           currency: "INR",
         });
 
-
-
         await refereeWallet.save();
       } else {
-        refereeWallet.balance += reward;
+        // Ensure balance never goes negative when adding reward
+        refereeWallet.balance = Math.max(0, Number(refereeWallet.balance) + Number(reward));
+        await refereeWallet.save();
       }
 
       const refereeTransaction = await Transaction.create({
@@ -94,7 +98,9 @@ export const registerUser = asyncHandler(async (req, res) => {
 
         await referrerWallet.save();
       } else {
-        referrerWallet.balance += reward;
+        // Ensure balance never goes negative when adding reward
+        referrerWallet.balance = Math.max(0, Number(referrerWallet.balance) + Number(reward));
+        await referrerWallet.save();
       }
 
       const referrerTransaction = await Transaction.create({

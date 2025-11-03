@@ -186,9 +186,11 @@ const CheckoutPage = () => {
   const calculateTotal = () => {
     const subtotal = calculateSubtotal;
     const shippingCost = selectedShipping ? selectedShipping.price : 0;
-    const couponDiscount = appliedCoupon ? appliedCoupon.couponDiscount : 0;
+    const couponDiscount = appliedCoupon ? (appliedCoupon.couponDiscount || 0) : 0;
 
-    return subtotal + shippingCost - couponDiscount;
+    // Ensure total never goes negative
+    const total = subtotal + shippingCost - couponDiscount;
+    return Math.max(0, total);
   };
 
   const handleRazorpaySuccess = useCallback(
