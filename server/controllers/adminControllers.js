@@ -61,6 +61,8 @@ export const logoutAdmin = asyncHandler(async (req, res) => {
     // Clear the admin cookie
     res.cookie("admin", "", {
       httpOnly: true,
+      secure: true,
+      sameSite: "none",
       expires: new Date(0),
     });
 

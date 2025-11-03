@@ -44,7 +44,11 @@ app.use(
     secret: "your-secret-key", 
     resave: false, 
     saveUninitialized: true, 
-    cookie: { secure: false }, 
+    cookie: { 
+      secure: true, // Required for cross-origin with sameSite: "none"
+      sameSite: "none", // Required for cross-origin requests
+      httpOnly: true,
+    }, 
   })
 );
 

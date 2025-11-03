@@ -7,9 +7,10 @@ const generateToken = (res, userId, role) => {
 
   res.cookie(role, token, {
     httpOnly: true,
-    sameSite: "lax",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === "production", // Conditional secure setting
+    sameSite: "none", // Required for cross-origin requests (Vercel → Render)
+    secure: true, // Required when sameSite is "none"
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    // Don't set domain - allows cookie to work across different domains
   });
 };
 
