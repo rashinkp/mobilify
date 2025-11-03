@@ -18,7 +18,7 @@ const optionalProtect = (role) => (req, res, next) => {
         };
       }
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore errors and proceed without authentication
     req.user = null;
   }

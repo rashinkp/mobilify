@@ -1,7 +1,6 @@
 import asyncHandler from "express-async-handler";
 import Wallet from "../models/walletSchema.js";
 import Transaction from "../models/walletTransactionSchema.js";
-import User from "../models/userSchema.js";
 
 export const getOrCreateWallet = asyncHandler(async (req, res) => {
   const { userId } = req.user;

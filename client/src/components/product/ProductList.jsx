@@ -1,13 +1,19 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Table from "../admin/ListItem.jsx";
 import { useNavigate } from "react-router";
 import noImage from "../../assets/noImage.png";
 import { Eye } from "lucide-react";
+import Modal from "../Modal.jsx";
 
 const ProductList = ({ products }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
+
+  const handleDeleteProduct = () => {
+    // Delete product logic here
+    console.log("Delete product");
+    setIsModalOpen(false);
+  };
 
   const productColumns = [
     {

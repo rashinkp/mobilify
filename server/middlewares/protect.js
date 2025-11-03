@@ -24,7 +24,7 @@ const protect = (role) => (req, res, next) => {
     };
 
     next();
-  } catch (error) {
+  } catch (_error) {
     res.status(401).json({ message: "Not authorized, token failed" });
   }
 };

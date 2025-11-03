@@ -1,5 +1,4 @@
 import expressAsyncHandler from "express-async-handler";
-import Order from "../models/orderSchema.js";
 import Payment from "../models/paymentSchema.js";
 import Razorpay from "razorpay";
 

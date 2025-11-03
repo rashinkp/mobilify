@@ -79,7 +79,7 @@ export const registerUser = asyncHandler(async (req, res) => {
         await refereeWallet.save();
       }
 
-      const refereeTransaction = await Transaction.create({
+      await Transaction.create({
         walletId: refereeWallet._id,
         type: "Credit",
         userId: id,
@@ -103,7 +103,7 @@ export const registerUser = asyncHandler(async (req, res) => {
         await referrerWallet.save();
       }
 
-      const referrerTransaction = await Transaction.create({
+      await Transaction.create({
         walletId: referrerWallet._id,
         type: "Credit",
         userId: referredUser._id,
@@ -192,7 +192,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
     });
     res.status(200).json({ message: "User Logout Successful" });
   } catch (err) {
-    console.error("Error during admin logout:", error);
+    console.error("Error during admin logout:", err);
 
     throw new Error("Failed to log out admin");
   }

@@ -28,7 +28,6 @@ import {
   updateProduct,
 } from "../controllers/productControllers.js";
 import protect from "../middlewares/protect.js";
-import { getUser } from "../controllers/userControllers.js";
 import {
   averageOrderValue,
   getAllOrders,

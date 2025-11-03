@@ -148,6 +148,7 @@ export const addAllToCart = asyncHandler(async (req, res) => {
     cart = new Cart({ userId, cartItems: [] });
   }
 
+  const failedItems = [];
 
   for (const wishlistItem of wishlist.items) {
     const { productId, quantity = 1 } = wishlistItem;
@@ -163,7 +164,10 @@ export const addAllToCart = asyncHandler(async (req, res) => {
     }
 
     if (product.stock < quantity) {
-     
+      failedItems.push({
+        productId: productId.toString(),
+        reason: "Insufficient stock",
+      });
       continue;
     }
 

@@ -12,7 +12,7 @@ const hasEmoji = (value) => {
 const isBasicText = (value) => {
   if (!value) return true;
   // Allow letters, numbers, spaces, and basic punctuation
-  const basicTextRegex = /^[a-zA-Z0-9\s\-_.,!?@#$%^&*()+=:;"'<>\[\]{}|\\\/`~]*$/;
+  const basicTextRegex = /^[a-zA-Z0-9\s\-_.,!?@#$%^&*()+=:;"'<>[\]{}|\\/`~]*$/;
   return basicTextRegex.test(value) && !hasEmoji(value);
 };
 
@@ -53,7 +53,7 @@ export const passwordValidation = Yup.string()
     (value) => {
       if (!value) return true;
       // Allow letters, numbers, and common special characters
-      const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]*$/;
+      const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]*$/;
       return passwordRegex.test(value) && !hasEmoji(value);
     }
   );
@@ -497,7 +497,7 @@ export const profileValidationSchema = Yup.object().shape({
       (value) => {
         if (!value) return true;
         // Allow letters, numbers, spaces, and basic punctuation for bio
-        const bioRegex = /^[a-zA-Z0-9\s\-.,!?@#$%^&*()+=:;"'<>\[\]{}|\\\/`~]*$/;
+        const bioRegex = /^[a-zA-Z0-9\s\-.,!?@#$%^&*()+=:;"'<>[\]{}|\\/`~]*$/;
         return bioRegex.test(value) && !hasEmoji(value);
       }
     ),
@@ -548,7 +548,7 @@ export const passwordSchema = Yup.object().shape({
         "Password contains invalid characters",
         (value) => {
           if (!value) return true;
-          const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]*$/;
+          const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]*$/;
           return passwordRegex.test(value) && !hasEmoji(value);
         }
       )
@@ -582,7 +582,7 @@ export const passwordSchemaWithoutCurr = Yup.object().shape({
       "Password contains invalid characters",
       (value) => {
         if (!value) return true;
-        const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]*$/;
+        const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]*$/;
         return passwordRegex.test(value) && !hasEmoji(value);
       }
     ),
@@ -693,7 +693,7 @@ export const reviewSchema = Yup.object().shape({
       (value) => {
         if (!value) return true;
         // Allow letters, numbers, spaces, and extended punctuation for reviews
-        const descRegex = /^[a-zA-Z0-9\s\-.,!?@#$%^&*()+=:;"'<>\[\]{}|\\\/`~]*$/;
+        const descRegex = /^[a-zA-Z0-9\s\-.,!?@#$%^&*()+=:;"'<>[\]{}|\\/`~]*$/;
         return descRegex.test(value) && !hasEmoji(value);
       }
     ),

@@ -496,9 +496,7 @@ export const updateOrderStatus = async (req, res) => {
       returnReason = "",
     } = req.body;
 
-    const { userId } = req.user;
-
-    
+    // const { userId } = req.user; // Unused but kept for future use
 
     let order;
 

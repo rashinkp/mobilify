@@ -1,7 +1,6 @@
 // models/otpModel.js
 import mongoose from"mongoose";
 import mailSender from "../utils/mailSender.js";
-import User from "./userSchema.js";
 
 const otpSchema = new mongoose.Schema({
   otp: {

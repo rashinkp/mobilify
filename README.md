@@ -1,47 +1,187 @@
-📋 Overview
+# Mobilify - E-commerce Platform
 
-This project is a full-stack web application built using the MERN stack (MongoDB, Express.js, React, Node.js). It demonstrates modern web development practices, including RESTful API design, responsive UI, authentication, and efficient state management. The goal of this project is to showcase my ability to build scalable, maintainable, and user-friendly applications from front to back.
+Full-stack e-commerce application with admin and user dashboards.
 
-🧠 Key Features
+## Tech Stack
 
-🔐 User Authentication & Authorization (JWT-based or OAuth)
+### Frontend
+- React 18
+- Vite
+- Redux Toolkit
+- React Router
+- Tailwind CSS
+- Razorpay Integration
+- Google OAuth
 
-📦 CRUD Operations with MongoDB
+### Backend
+- Node.js
+- Express.js
+- MongoDB (Mongoose)
+- JWT Authentication
+- Razorpay Payment Gateway
+- Cloudinary (Image Storage)
+- Nodemailer (Email Service)
 
-⚛️ React Frontend with clean, reusable components and hooks
+## Project Structure
 
-🌐 Express & Node.js Backend with structured routing and controllers
+```
+├── client/          # Frontend React application
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── redux/
+│   │   └── routes/
+│   ├── package.json
+│   └── vercel.json  # Vercel deployment config
+│
+└── server/          # Backend Node.js application
+    ├── controllers/
+    ├── models/
+    ├── routes/
+    ├── middlewares/
+    ├── utils/
+    ├── package.json
+    └── .eslintrc.json
+```
 
-🎨 Responsive UI/UX using modern CSS or frameworks (e.g., Tailwind, Material UI, Bootstrap)
+## Getting Started
 
-⚡ Real-time Features (if applicable — e.g., sockets, live updates)
+### Prerequisites
+- Node.js (v18 or higher)
+- MongoDB Atlas account or local MongoDB
+- Cloudinary account
+- Razorpay account
+- Vercel account (for frontend deployment)
+- Render account (for backend deployment)
 
-🧩 State Management with Context API or Redux
+### Installation
 
-🧱 Scalable Folder Structure for clarity and maintainability
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Mobilify
+   ```
 
-🛠️ Tech Stack
+2. **Install Frontend Dependencies**
+   ```bash
+   cd client
+   npm install
+   ```
 
-Frontend: React, HTML, CSS, JavaScript (ES6+), [UI Framework]
-Backend: Node.js, Express.js
-Database: MongoDB (Mongoose ODM)
-Authentication: JWT / OAuth
-Deployment: [e.g., Vercel, Render, Netlify, or Heroku]
+3. **Install Backend Dependencies**
+   ```bash
+   cd ../server
+   npm install
+   ```
 
-💡 Highlights
+4. **Set up Environment Variables**
 
-Follows clean code and RESTful principles
+   Frontend (`client/.env`):
+   ```env
+   VITE_API_URL=http://localhost:4001
+   VITE_RAZORPAY_KEY_ID=your_razorpay_key
+   ```
 
-Implements secure authentication and data validation
+   Backend (`server/.env`):
+   ```env
+   PORT=4001
+   MONGODB_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   CORS_ORIGIN=http://localhost:3000
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+   CLOUDINARY_API_KEY=your_cloudinary_key
+   CLOUDINARY_API_SECRET=your_cloudinary_secret
+   RAZORPAY_KEY_ID=your_razorpay_key_id
+   RAZORPAY_KEY_SECRET=your_razorpay_secret
+   EMAIL_USER=your_email
+   EMAIL_PASS=your_email_password
+   ```
 
-Designed with performance and scalability in mind
+5. **Run Development Servers**
 
-Demonstrates proficiency in both frontend and backend development
+   Frontend:
+   ```bash
+   cd client
+   npm run dev
+   ```
 
+   Backend:
+   ```bash
+   cd server
+   npm run dev
+   ```
 
-🧑‍💻 About Me
+## Available Scripts
 
-I’m Rashin , MERN Stack Developer passionate about building modern web applications with clean architecture, intuitive UI, and efficient backend systems.
-If you’re looking for a developer with hands-on experience in the full web development lifecycle — from design to deployment — I’d love to connect!
+### Frontend
+- `npm run dev` - Start development server
+- `npm run build` - Build for production (includes lint check)
+- `npm run lint` - Check for lint errors
+- `npm run lint:check` - Check with zero warnings
+- `npm run lint:fix` - Auto-fix lint errors
+- `npm run preview` - Preview production build
 
-📫 Contact: rashinkp001@gmail.com
+### Backend
+- `npm run dev` - Start development server with nodemon
+- `npm start` - Start production server
+- `npm run lint` - Check for lint errors
+- `npm run lint:check` - Check with zero warnings
+- `npm run lint:fix` - Auto-fix lint errors
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+### Quick Deploy
+
+**Frontend (Vercel):**
+1. Connect GitHub repo to Vercel
+2. Set root directory to `client`
+3. Deploy (vercel.json handles the rest)
+
+**Backend (Render):**
+1. Create new Web Service on Render
+2. Connect GitHub repo
+3. Set root directory to `server`
+4. Add environment variables
+5. Deploy
+
+## Features
+
+- ✅ User Authentication (Email/Password, Google OAuth)
+- ✅ Product Management (Admin)
+- ✅ Category & Brand Management
+- ✅ Shopping Cart
+- ✅ Order Management
+- ✅ Payment Integration (Razorpay, Wallet, COD)
+- ✅ Coupon System
+- ✅ Referral Program
+- ✅ Product Reviews
+- ✅ Wishlist
+- ✅ Address Management
+- ✅ Wallet System
+- ✅ Admin Dashboard with Analytics
+
+## Security Features
+
+- Password hashing with bcrypt
+- JWT token authentication
+- Protected routes (Admin/User)
+- CORS configuration
+- Input validation
+- SQL injection prevention (MongoDB)
+- XSS protection
+
+## License
+
+ISC
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run lint checks: `npm run lint:check`
+5. Fix any errors: `npm run lint:fix`
+6. Commit and push
+7. Create a Pull Request

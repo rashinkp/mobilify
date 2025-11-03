@@ -1,6 +1,5 @@
 import asyncHandler from "express-async-handler";
 import Category from "../models/categorySchema.js";
-import Product from "../models/productSchema.js";
 import Order from "../models/orderSchema.js";
 
 export const addCategory = asyncHandler(async (req, res) => {

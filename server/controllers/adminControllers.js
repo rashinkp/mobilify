@@ -84,7 +84,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
       res.status(404).json({message:'Can not find any users'})
     }
 
-  } catch (err) {
+  } catch (_err) {
     // throw new Error("Failed to fetch users data");
     res.status(400).json({ message: 'error while fetching user data' })
   }

@@ -10,7 +10,6 @@ import { addAllToCart, getAllWishListProducts, removeFromWishlist, toggleWishLis
 import { applyCoupon, getAllApplicableCoupons } from '../controllers/couponController.js';
 import { addAmountToWallet, getOrCreateWallet, processTransaction } from '../controllers/walletController.js';
 import { addToFailedOrders } from '../controllers/failedOrderController.js';
-import { getSalesAnalytics } from '../controllers/salesController.js';
 import { addReview, getAReview, productReview } from '../controllers/reviewController.js';
 import { createReferralCode, getUserReferrals } from '../controllers/referralController.js';
 

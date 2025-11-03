@@ -16,7 +16,7 @@ export const addReview = asyncHandler(async (req, res) => {
   const existingReview = await Review.findOne({ userId, productId });
 
   if (existingReview) {
-    const updatedReview = await Review.findOneAndUpdate(
+    await Review.findOneAndUpdate(
       { userId, productId },
       {
         rating: data?.rating,
@@ -28,7 +28,7 @@ export const addReview = asyncHandler(async (req, res) => {
     return res.status(200).json({ message: "Review updated successfully" });
   }
 
-  const review = await Review.create({
+  await Review.create({
     userId,
     productId,
     rating: data?.rating,

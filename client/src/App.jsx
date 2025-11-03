@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Route, Routes } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import UserRoutes from "./routes/UserRoutes";
@@ -11,7 +11,7 @@ const App = () => {
   const { userInfo } = useSelector((state) => state.userAuth);
 
   // Only fetch cart count when user is logged in
-  const { data = {}, isLoading, isError, refetch, error } = useGetCartCountQuery(undefined, {
+  const { data = {}, isLoading, isError, error } = useGetCartCountQuery(undefined, {
     skip: !userInfo,
   });
 

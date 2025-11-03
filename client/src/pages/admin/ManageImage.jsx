@@ -12,12 +12,16 @@ import Modal from "../../components/Modal.jsx";
 import { Upload, Trash2, Plus, Box, ChevronRight, Home } from "lucide-react";
 
 const ManageImage = () => {
-  const ImageRefs = Array.from({ length: 4 }, () => useRef());
+  const ImageRef1 = useRef();
+  const ImageRef2 = useRef();
+  const ImageRef3 = useRef();
+  const ImageRef4 = useRef();
+  const ImageRefs = [ImageRef1, ImageRef2, ImageRef3, ImageRef4];
   const [images, setImages] = useState([null, null, null, null]);
   const [deleteQueue, setDeleteQueue] = useState([]);
   const { id: productId } = useParams();
   const [updateImage] = useUpdateProductImageMutation();
-  const { data: product, isLoading, error } = useGetProductQuery(productId);
+  const { data: product, isLoading } = useGetProductQuery(productId);
   const [isUploading, setIsUploading] = useState(false);
   const [isDelModalOpen, setIsDelModalOpen] = useState(false);
   const [deleteIndex, setDeleteIndex] = useState(null);
@@ -26,7 +30,7 @@ const ManageImage = () => {
     if (product?.images) {
       const initialImages = product.images.map((img) => img.secure_url).slice(0, 4);
       const remainingSlots = Math.max(0, 4 - initialImages.length);
-      setImages((prev) => [
+      setImages(() => [
         ...initialImages,
         ...Array(remainingSlots).fill(null),
       ]);

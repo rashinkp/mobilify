@@ -1,8 +1,8 @@
-import React from "react";
 import Form from "../Form";
 import { getProductFields } from "../product/productFields.js";
 import { productValidation } from "../../validations/validationSchemas.js";
 import { useGetAllCategoryQuery } from "../../redux/slices/categoryApiSlices.js";
+import { RotatingLines } from "react-loader-spinner";
 
 const ProductAddForm = ({ isModalFormOpen, onClose, onSubmit }) => {
   const { data: categories = [], isLoading } = useGetAllCategoryQuery({
@@ -24,8 +24,8 @@ const ProductAddForm = ({ isModalFormOpen, onClose, onSubmit }) => {
     }
   };
 
-  {
-    isLoading && (
+  if (isLoading) {
+    return (
       <div className="h-screen w-full absolute top-0 z-50 left-0 backdrop-blur-sm bg-black/30 flex justify-center items-center">
         <RotatingLines
           visible={true}
@@ -40,6 +40,7 @@ const ProductAddForm = ({ isModalFormOpen, onClose, onSubmit }) => {
       </div>
     );
   }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto p-4"
