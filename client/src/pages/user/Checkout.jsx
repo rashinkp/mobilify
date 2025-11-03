@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Check,
   ShoppingCart,
@@ -79,17 +79,24 @@ const CheckoutPage = () => {
   const addresses = showAllAddresses ? allAddresses : limitedAddresses;
   const hasMoreAddresses = limitedAddresses?.length === 4;
 
-  const products = cartData.cartItems || [];
+  const products = cartData?.cartItems || [];
+  const prevProductsRef = useRef(JSON.stringify(products));
 
   useEffect(() => {
-    if (products && products.length > 0) {
-      const insufficientStock = products.some(
-        (product) => product.productDetails?.stock < product.quantity
-      );
-      setHasInsufficientStock(insufficientStock > 0 ? true : false);
-      console.log(hasInsufficientStock, "hasddjfsdlfdsaf");
-    } else {
-      setHasInsufficientStock(false);
+    const currentProductsStr = JSON.stringify(products);
+    
+    // Only update if products actually changed
+    if (prevProductsRef.current !== currentProductsStr) {
+      prevProductsRef.current = currentProductsStr;
+      
+      if (products && products.length > 0) {
+        const insufficientStock = products.some(
+          (product) => product.productDetails?.stock < product.quantity
+        );
+        setHasInsufficientStock(insufficientStock);
+      } else {
+        setHasInsufficientStock(false);
+      }
     }
   }, [products]);
 
@@ -179,9 +186,11 @@ const CheckoutPage = () => {
   const calculateTotal = () => {
     const subtotal = calculateSubtotal;
     const shippingCost = selectedShipping ? selectedShipping.price : 0;
-    const couponDiscount = appliedCoupon ? appliedCoupon.couponDiscount : 0;
+    const couponDiscount = appliedCoupon ? (appliedCoupon.couponDiscount || 0) : 0;
 
-    return subtotal + shippingCost - couponDiscount;
+    // Ensure total never goes negative
+    const total = subtotal + shippingCost - couponDiscount;
+    return Math.max(0, total);
   };
 
   const handleRazorpaySuccess = useCallback(
@@ -190,33 +199,112 @@ const CheckoutPage = () => {
         const paymentId = response.razorpay_payment_id;
         const orderId = razorpayOrderData.orderId;
 
-        const verifyPaymentResponse = await verifyPayment({
-          paymentId,
-        });
-
-        if (verifyPaymentResponse) {
-          const orderResponse = await placeOrder({
-            ...razorpayOrderData,
+        // Verify payment first
+        let verifyPaymentResponse;
+        try {
+          verifyPaymentResponse = await verifyPayment({
             paymentId,
-            paymentStatus: "Successful",
-          });
-
-          if (!orderResponse) {
-            errorToast("Failed to create order. Please try again.");
-            return;
+          }).unwrap();
+        } catch (verifyError) {
+          // Payment verification failed - create failed order for retry
+          errorToast(
+            verifyError?.data?.message ||
+              verifyError?.message ||
+              "Payment verification failed. Order moved to pending orders."
+          );
+          try {
+            await addToFailedPayment({
+              ...razorpayOrderData,
+              paymentId,
+              paymentStatus: "Failed",
+            }).unwrap();
+            navigate("/orders");
+          } catch (failedOrderError) {
+            console.error("Error creating failed order:", failedOrderError);
+            errorToast("Failed to save order. Please contact support.");
           }
-          await refetchCart();
-          successToast("Payment successful!");
-          navigate(`/orderSuccess`);
+          return;
+        }
+
+        // Payment verified successfully, now place order
+        if (verifyPaymentResponse?.success) {
+          try {
+            const orderResponse = await placeOrder({
+              ...razorpayOrderData,
+              paymentId,
+              paymentStatus: "Successful",
+            }).unwrap();
+
+            if (!orderResponse) {
+              errorToast("Failed to create order. Please try again.");
+              // Create failed order as backup
+              try {
+                await addToFailedPayment({
+                  ...razorpayOrderData,
+                  paymentId,
+                  paymentStatus: "Failed",
+                }).unwrap();
+                navigate("/orders");
+              } catch (failedOrderError) {
+                console.error("Error creating failed order:", failedOrderError);
+              }
+              return;
+            }
+            await refetchCart();
+            successToast("Payment successful!");
+            navigate(`/orderSuccess`);
+          } catch (orderError) {
+            errorToast(
+              orderError?.data?.message ||
+                orderError?.message ||
+                "Failed to create order. Please try again."
+            );
+            // Create failed order as backup
+            try {
+              await addToFailedPayment({
+                ...razorpayOrderData,
+                paymentId,
+                paymentStatus: "Failed",
+              }).unwrap();
+              navigate("/orders");
+            } catch (failedOrderError) {
+              console.error("Error creating failed order:", failedOrderError);
+            }
+          }
         } else {
           errorToast("Payment verification failed. Please try again.");
+          // Create failed order
+          try {
+            await addToFailedPayment({
+              ...razorpayOrderData,
+              paymentId,
+              paymentStatus: "Failed",
+            }).unwrap();
+            navigate("/orders");
+          } catch (failedOrderError) {
+            console.error("Error creating failed order:", failedOrderError);
+          }
         }
       } catch (error) {
-        errorToast("Error processing payment. Please try again.");
+        errorToast(
+          error?.data?.message ||
+            error?.message ||
+            "Error processing payment. Please try again."
+        );
         console.error("Payment error:", error);
+        // Try to create failed order as last resort
+        try {
+          await addToFailedPayment({
+            ...razorpayOrderData,
+            paymentStatus: "Failed",
+          }).unwrap();
+          navigate("/orders");
+        } catch (failedOrderError) {
+          console.error("Error creating failed order:", failedOrderError);
+        }
       }
     },
-    [verifyPayment, placeOrder, navigate]
+    [verifyPayment, placeOrder, navigate, addToFailedPayment, refetchCart]
   );
 
   const triggerRazorpayCheckout = useCallback(
@@ -272,7 +360,7 @@ const CheckoutPage = () => {
         offerPrice:
           product?.productDetails.price - finalPrice(product?.productDetails),
         quantity: product.quantity,
-        imageUrl: product?.productDetails?.images[0]?.url,
+        imageUrl: product?.productDetails?.images?.[0]?.secure_url || product?.productDetails?.imageUrl || "",
         returnPolicy: product?.productDetails?.returnPolicy,
         coupon:
           appliedCoupon?.productDetails?.productId ===
@@ -324,16 +412,47 @@ const CheckoutPage = () => {
         }
       } else if (selectedPayment === "Wallet") {
         const amount = orderData.total;
-        await debitAmountFromWallet({ amount }).unwrap();
-
-        const response = await placeOrder(orderData).unwrap();
-        if (response) {
-          // Refetch cart to clear it from cache
-          await refetchCart();
-          successToast("Order placed successfully");
-          navigate(`/orderSuccess`);
-        } else {
-          errorToast();
+        let walletDebited = false;
+        try {
+          // First debit from wallet
+          await debitAmountFromWallet({ amount }).unwrap();
+          walletDebited = true;
+          
+          // If debit successful, place order
+          try {
+            const response = await placeOrder(orderData).unwrap();
+            if (response) {
+              // Refetch cart to clear it from cache
+              await refetchCart();
+              successToast("Order placed successfully");
+              navigate(`/orderSuccess`);
+            } else {
+              errorToast("Failed to create order. Amount will be refunded to your wallet.");
+              // Note: The backend should handle refund automatically if order creation fails
+              // but wallet was debited. For now, user needs to contact support for refund.
+              console.error("Order creation failed after wallet debit. Amount:", amount);
+            }
+          } catch (orderError) {
+            // Order creation failed after wallet debit - this is a critical error
+            errorToast(
+              orderError?.data?.message ||
+                orderError?.message ||
+                "Order creation failed. Amount will be refunded to your wallet. Please contact support if refund is not processed within 24 hours."
+            );
+            console.error("Order creation failed after wallet debit:", orderError);
+            // In production, you would trigger an automatic refund here
+            // or the backend should handle this in a transaction/rollback mechanism
+          }
+        } catch (walletError) {
+          // Handle wallet errors (insufficient balance, etc.)
+          const errorMessage =
+            walletError?.data?.message ||
+            walletError?.message ||
+            "Wallet payment failed. Please try again or use another payment method.";
+          errorToast(errorMessage);
+          
+          // If wallet debit failed, don't create failed order (no payment was made)
+          // User can retry with different payment method
         }
       }
     } catch (error) {
@@ -343,8 +462,6 @@ const CheckoutPage = () => {
       console.error("Order error:", error);
     }
   };
-
-  console.log(products);
 
   if (isAddressLoading || isCartLoading) {
     return (

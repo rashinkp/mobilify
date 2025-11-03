@@ -53,8 +53,34 @@ export const addOrder = asyncHandler(async (req, res) => {
       }
     }
 
-    // Validate payment
-    const payment = await Payment.findOne({ paymentId });
+    // Validate payment based on payment method
+    let payment = null;
+    let paymentStatus = "Pending";
+
+    if (paymentMethod === "Razorpay") {
+      if (!paymentId) {
+        return res.status(400).json({
+          message: "Payment ID is required for Razorpay payments",
+        });
+      }
+      payment = await Payment.findOne({ paymentId });
+      if (!payment) {
+        return res.status(404).json({
+          message: "Payment not found. Please verify your payment.",
+        });
+      }
+      if (payment.status !== "Successful") {
+        return res.status(400).json({
+          message: `Payment ${payment.status}. Only successful payments are accepted.`,
+          paymentStatus: payment.status,
+        });
+      }
+      paymentStatus = "Successful";
+    } else if (paymentMethod === "Wallet") {
+      paymentStatus = "Successful";
+    } else if (paymentMethod === "Cash On Delivery") {
+      paymentStatus = "Pending";
+    }
 
     let coupon = null;
 
@@ -69,8 +95,6 @@ export const addOrder = asyncHandler(async (req, res) => {
 
       await coupon.save();
     }
-
-    const paymentStatus = paymentMethod === "Wallet" && "Successful";
 
     const orderDocuments = orderItems.map((item) => ({
       userId: userId,
@@ -92,7 +116,7 @@ export const addOrder = asyncHandler(async (req, res) => {
       },
       status: "Order placed",
       paymentId: paymentId || null,
-      paymentStatus: paymentStatus || payment?.status || "Pending",
+      paymentStatus: paymentStatus,
     }));
 
     const createdOrders = await Order.insertMany(orderDocuments);
@@ -176,15 +200,125 @@ export const getAllOrdersWithEachProducts = async (req, res) => {
     // First, get total count
     const totalCount = await Order.countDocuments({ userId: convertedUserId });
 
-    // Then get paginated orders
+    // Then get paginated orders with product lookup for images
     const orders = await Order.aggregate([
       {
         $match: { userId: convertedUserId },
       },
       {
+        $lookup: {
+          from: "products",
+          localField: "productId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $addFields: {
+          // Extract first product image secure_url if available
+          productImageUrl: {
+            $let: {
+              vars: {
+                firstImage: {
+                  $cond: {
+                    if: {
+                      $and: [
+                        { $gt: [{ $size: { $ifNull: ["$productDetails", []] } }, 0] },
+                        { $gt: [{ $size: { $arrayElemAt: ["$productDetails.images", 0] } }, 0] },
+                      ],
+                    },
+                    then: { $arrayElemAt: [{ $arrayElemAt: ["$productDetails.images", 0] }, 0] },
+                    else: null,
+                  },
+                },
+              },
+              in: {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $ne: ["$$firstImage", null] },
+                      { $ne: ["$$firstImage.secure_url", null] },
+                    ],
+                  },
+                  then: "$$firstImage.secure_url",
+                  else: null,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          // Use stored imageUrl if available and not empty, otherwise use product image
+          imageUrl: {
+            $cond: {
+              if: { $and: [{ $ne: ["$imageUrl", ""] }, { $ne: ["$imageUrl", null] }] },
+              then: "$imageUrl",
+              else: "$productImageUrl",
+            },
+          },
+        },
+      },
+      {
         $unionWith: {
           coll: "failedorders",
-          pipeline: [{ $match: { userId: convertedUserId } }],
+          pipeline: [
+            { $match: { userId: convertedUserId } },
+            {
+              $lookup: {
+                from: "products",
+                localField: "productId",
+                foreignField: "_id",
+                as: "productDetails",
+              },
+            },
+            {
+              $addFields: {
+                productImageUrl: {
+                  $let: {
+                    vars: {
+                      firstImage: {
+                        $cond: {
+                          if: {
+                            $and: [
+                              { $gt: [{ $size: { $ifNull: ["$productDetails", []] } }, 0] },
+                              { $gt: [{ $size: { $arrayElemAt: ["$productDetails.images", 0] } }, 0] },
+                            ],
+                          },
+                          then: { $arrayElemAt: [{ $arrayElemAt: ["$productDetails.images", 0] }, 0] },
+                          else: null,
+                        },
+                      },
+                    },
+                    in: {
+                      $cond: {
+                        if: {
+                          $and: [
+                            { $ne: ["$$firstImage", null] },
+                            { $ne: ["$$firstImage.secure_url", null] },
+                          ],
+                        },
+                        then: "$$firstImage.secure_url",
+                        else: null,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $addFields: {
+                imageUrl: {
+                  $cond: {
+                    if: { $and: [{ $ne: ["$imageUrl", ""] }, { $ne: ["$imageUrl", null] }] },
+                    then: "$imageUrl",
+                    else: "$productImageUrl",
+                  },
+                },
+              },
+            },
+          ],
         },
       },
       {
@@ -195,6 +329,12 @@ export const getAllOrdersWithEachProducts = async (req, res) => {
       },
       {
         $limit: parseInt(limit),
+      },
+      {
+        $project: {
+          productDetails: 0, // Remove productDetails from final output
+          productImageUrl: 0, // Remove temporary field
+        },
       },
     ]);
 
@@ -352,6 +492,8 @@ export const updateOrderStatus = async (req, res) => {
       orderId,
       paymentId,
       orderData,
+      cancellationReason = "",
+      returnReason = "",
     } = req.body;
 
     const { userId } = req.user;
@@ -397,7 +539,17 @@ export const updateOrderStatus = async (req, res) => {
     order.paymentId = paymentId || order.paymentId;
 
     if (order.status === "Delivered") {
-      order.paymentStatus = "Successful";
+      // For COD orders, automatically set payment status to Successful on delivery
+      if (order.paymentMethod === "Cash On Delivery") {
+        order.paymentStatus = "Successful";
+      }
+      // For online payments, keep existing payment status (managed by payment gateway)
+      // Only update to Successful if it was already Successful or Pending
+      else if (order.paymentStatus === "Pending" && previousPaymentStatus !== "Successful") {
+        // Keep as is for online payments - payment gateway manages this
+        // Don't auto-update online payment status
+      }
+      
       order.deliveryDate = new Date(); 
       if (order.returnPolicy) {
         let currentDate = new Date();
@@ -415,6 +567,14 @@ export const updateOrderStatus = async (req, res) => {
       previousStatus !== "Cancelled" &&
       previousStatus !== "Returned"
     ) {
+      // Store cancellation or return reason
+      if (newStatus === "Cancelled" && cancellationReason) {
+        order.cancellationReason = cancellationReason.trim();
+      }
+      if (newStatus === "Returned" && returnReason) {
+        order.returnReason = returnReason.trim();
+      }
+      
       await restoreStock(order);
     }
 

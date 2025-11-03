@@ -24,10 +24,11 @@ const ManageImage = () => {
 
   useEffect(() => {
     if (product?.images) {
-      const initialImages = product.images.map((img) => img.secure_url);
+      const initialImages = product.images.map((img) => img.secure_url).slice(0, 4);
+      const remainingSlots = Math.max(0, 4 - initialImages.length);
       setImages((prev) => [
         ...initialImages,
-        ...Array(4 - initialImages.length).fill(null),
+        ...Array(remainingSlots).fill(null),
       ]);
     }
   }, [product]);
@@ -63,35 +64,71 @@ const ManageImage = () => {
 
   const uploadToCloudinary = async () => {
     setIsUploading(true);
-    let newImages = images.filter((img) => img && typeof img !== "string");
-    if (newImages.length < 1) {
-      errorToast("Please select 1 new image to upload");
-      setIsUploading(false);
-      return true;
+    
+    // Find all slots with new images (non-string) and track their positions
+    const imageUpdates = [];
+    for (let index = 0; index < images.length; index++) {
+      const image = images[index];
+      if (image && typeof image !== "string") {
+        // This is a new image file that needs to be uploaded
+        imageUpdates.push({ index, image });
+      }
     }
 
-    let uploadedUrl = [];
-    for (const image of newImages) {
+    // Allow updates even if only deletions (deleteQueue has items)
+    if (imageUpdates.length < 1 && (!deleteQueue || deleteQueue.length === 0)) {
+      errorToast("Please select at least 1 image to upload or delete");
+      setIsUploading(false);
+      return;
+    }
+
+    // Upload images and maintain their slot positions
+    const uploadedImages = [];
+    for (const { index, image } of imageUpdates) {
       try {
         const data = await uploadImageToCloudinary(image);
-        uploadedUrl.push(data);
-        newImages = null;
+        if (!data || !data.secure_url || !data.public_id) {
+          throw new Error("Invalid response from Cloudinary");
+        }
+        uploadedImages.push({ index, imageData: data });
       } catch (error) {
         console.error("Upload error:", error);
+        const errorMessage = error.message || `Failed to upload image at slot ${index + 1}`;
+        errorToast(errorMessage);
+        setIsUploading(false);
+        return;
       }
     }
 
     try {
-      await updateImage({
+      // Ensure we always send arrays, not undefined
+      const result = await updateImage({
         productId,
-        uploadedUrl: [...uploadedUrl],
-        deleteQueue,
-      });
+        uploadedImages: uploadedImages.length > 0 ? uploadedImages : [], // Array of { index, imageData }
+        deleteQueue: deleteQueue && deleteQueue.length > 0 ? deleteQueue : [],
+      }).unwrap();
+      
       setIsUploading(false);
       successToast("Images updated successfully!");
-      uploadedUrl = [];
+      setDeleteQueue([]);
+      
+      // Reset file input after successful upload
+      ImageRefs.forEach(ref => {
+        if (ref.current) {
+          ref.current.value = "";
+        }
+      });
     } catch (error) {
       console.error("Update error:", error);
+      console.error("Error details:", {
+        status: error?.status,
+        data: error?.data,
+        uploadedImages: uploadedImages,
+        deleteQueue: deleteQueue,
+      });
+      const errorMessage = error?.data?.error || error?.data?.message || error?.message || "Failed to update images";
+      errorToast(errorMessage);
+      setIsUploading(false);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Trash2,
   Plus,
@@ -28,22 +28,28 @@ const ShoppingCart = () => {
   const [deletItem] = useDeleteFromCartMutation();
   const [updateCartQuantity] = useUpdateProductQuantityMutation();
   const dispatch = useDispatch();
+  
   const cartItems = data?.cartItems || [];
-
   const [products, setProducts] = useState([]);
+  const prevCartItemsRef = useRef(JSON.stringify(cartItems));
 
   const navigate = useNavigate();
 
-  console.log(products);
-
   useEffect(() => {
-    if (cartItems && cartItems.length > 0) {
-      const filteredItems = cartItems.filter(
-        (item) => Object.keys(item).length > 0
-      );
-      setProducts(filteredItems);
-    } else {
-      setProducts([]);
+    const currentCartItemsStr = JSON.stringify(cartItems);
+    
+    // Only update if cartItems actually changed
+    if (prevCartItemsRef.current !== currentCartItemsStr) {
+      prevCartItemsRef.current = currentCartItemsStr;
+      
+      if (cartItems && cartItems.length > 0) {
+        const filteredItems = cartItems.filter(
+          (item) => Object.keys(item).length > 0
+        );
+        setProducts(filteredItems);
+      } else {
+        setProducts([]);
+      }
     }
   }, [cartItems]);
 
@@ -118,8 +124,6 @@ const ShoppingCart = () => {
         const quantity = product?.quantity || 0;
 
         const offerPercent = Math.min(productOffer + categoryOffer, 100);
-
-        console.log(offerPercent);
 
         const discountedPrice = (price * (100 - offerPercent)) / 100;
 
@@ -239,13 +243,21 @@ const ShoppingCart = () => {
                 )}
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <img
-                    src={product?.productDetails?.images[0]?.secure_url || ""}
-                    alt="Product image is not available"
-                    className={`w-full sm:w-24 h-40 sm:h-24 object-cover rounded ${
+                  {product?.productDetails?.images?.[0]?.secure_url || product?.productDetails?.imageUrl ? (
+                    <img
+                      src={product?.productDetails?.images?.[0]?.secure_url || product?.productDetails?.imageUrl}
+                      alt={product?.productDetails?.name || "Product"}
+                      className={`w-full sm:w-24 h-40 sm:h-24 object-cover rounded ${
+                        product?.productDetails?.stock < 1 ? "opacity-50" : ""
+                      }`}
+                    />
+                  ) : (
+                    <div className={`w-full sm:w-24 h-40 sm:h-24 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center ${
                       product?.productDetails?.stock < 1 ? "opacity-50" : ""
-                    }`}
-                  />
+                    }`}>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 text-center px-2">Image not available</span>
+                    </div>
+                  )}
 
                   <div className="flex-grow space-y-2">
                     <h2 className="text-xl font-semibold">

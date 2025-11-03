@@ -122,6 +122,8 @@ const OrderSchema = new mongoose.Schema(
     orderDate: { type: Date, default: Date.now },
     deliveryDate: { type: Date },
     returnWithinDate: { type: Date },
+    cancellationReason: { type: String, trim: true },
+    returnReason: { type: String, trim: true },
   },
   {
     timestamps: true,

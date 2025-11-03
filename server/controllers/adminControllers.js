@@ -3,6 +3,7 @@ import Brand from "../models/brandSchema.js";
 import User from "../models/userSchema.js";
 import generateToken from "../utils/generateToken.js";
 import asyncHandler from 'express-async-handler'
+import { hashPassword } from "../utils/passwordHash.js";
 
 
 export const registerAdmin = asyncHandler(async (req, res) => {
@@ -14,10 +15,13 @@ export const registerAdmin = asyncHandler(async (req, res) => {
     throw new Error("Admin already exists");
   }
 
+  // Hash password explicitly before creating admin
+  const hashedPassword = await hashPassword(password);
+
   const admin = await Admin.create({
     name,
     email,
-    password,
+    password: hashedPassword,
   });
 
   if (admin) {
@@ -117,11 +121,17 @@ export const blockUser = asyncHandler(async (req, res) => {
 export const addBrand = asyncHandler(async (req, res) => {
   const { name, description, website } = req.body;
 
-   const brandExists = await Brand.findOne({ name });
-   if (brandExists) {
-     res.status(400);
-     console.log("Brand already exists");
-     throw new Error("Brand already exists");
+  // Case-insensitive check for existing brand
+  // Escape special regex characters in the name
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const brandExists = await Brand.findOne({ 
+    name: { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+  });
+  
+  if (brandExists) {
+    res.status(400);
+    console.log("Brand already exists");
+    throw new Error("Brand already exists");
   }
   
   const brand = await Brand.create({

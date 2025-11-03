@@ -141,7 +141,7 @@ const CouponApplicable = ({ coupon }) => {
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center gap-3"
                   >
                     <img
-                      src={product.images[0].secure_url}
+                      src={product?.images?.[0]?.secure_url || product?.imageUrl || ""}
                       alt={product.name}
                       className="w-8 h-8 rounded-full object-cover"
                     />

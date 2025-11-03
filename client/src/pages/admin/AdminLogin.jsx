@@ -30,51 +30,41 @@ const AdminLogin = () => {
     },
   ];
 
-  const extraLinks = [
-    {
-      linkText: "Forgot password?",
-      path: "/admin/forgot-password",
-    },
-  ];
-
-  
-
-  
   //api handling
 
   const [login, { isLoading }] = useAdminLoginMutation();
 
-  const { adminInfo } = useSelector((state) => state.adminAuth)
-
+  const { adminInfo } = useSelector((state) => state.adminAuth);
 
   useEffect(() => {
     if (adminInfo) {
-      navigate('/admin');
+      navigate("/admin");
     }
-  }, [navigate, adminInfo])
-  
-    const handleAdminAuth = async ({email , password}) => {
-      try {
-        const res = await login({ email, password }).unwrap();
-        dispatch(adminLogin({ ...res }));
-        successToast('Login Successfull');
-        navigate('/admin')
-      } catch (err) {
-        errorToast(err?.data?.message || err.message || err.error);
-      }
-    };
+  }, [navigate, adminInfo]);
+
+  const handleAdminAuth = async ({ email, password }) => {
+    try {
+      const res = await login({ email, password }).unwrap();
+      dispatch(adminLogin({ ...res }));
+      successToast("Login Successfull");
+      navigate("/admin");
+    } catch (err) {
+      errorToast(err?.data?.message || err.message || err.error);
+    }
+  };
 
   return (
     <>
-      <div className="flex h-screen w-full items-center">
-        <Form
-          title="Admin Login"
-          fields={formField}
-          extraLinks={extraLinks}
-          onSubmit={handleAdminAuth}
-          buttonText="Login"
-          validationRules={loginValidationSchema}
-        />
+      <div className="min-h-screen flex items-center justify-center px-4 py-14">
+        <div className="w-full max-w-md">
+          <Form
+            title="Admin Login"
+            fields={formField}
+            onSubmit={handleAdminAuth}
+            buttonText="Login"
+            validationRules={loginValidationSchema}
+          />
+        </div>
         {isLoading && (
           <div className="h-screen w-full absolute top-0 z-50 left-0 backdrop-blur-sm bg-black/30 flex justify-center items-center">
             <RotatingLines

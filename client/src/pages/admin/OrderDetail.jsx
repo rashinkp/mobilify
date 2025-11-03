@@ -10,6 +10,8 @@ import {
   ShoppingCart,
   Calendar,
   CheckCircle,
+  X,
+  RefreshCcw,
 } from "lucide-react";
 import { Link, useParams } from "react-router";
 import {
@@ -53,11 +55,19 @@ const OrderDetails = () => {
 
   const updateStatus = async (orderStatus, paymentStatus) => {
     try {
-      await changeStatus({
+      // For online payments, don't allow manual payment status changes
+      // Only allow status change, payment status is managed automatically
+      const payload = {
         orderId,
         newStatus: orderStatus,
-        newPaymentStatus: paymentStatus,
-      }).unwrap();
+      };
+      
+      // Only include payment status for COD orders
+      if (data.paymentMethod === "Cash On Delivery" && paymentStatus) {
+        payload.newPaymentStatus = paymentStatus;
+      }
+      
+      await changeStatus(payload).unwrap();
       successToast("Status updated successfully");
       setOrderModalVisible(false);
       setPaymentModalVisible(false);
@@ -74,10 +84,17 @@ const OrderDetails = () => {
       setOrderModalVisible(true);
       return;
     }
-    updateStatus(newOrderStatus, data.paymentStatus);
+    // For COD orders, when status changes to Delivered, payment status will auto-update to Successful
+    // For online payments, payment status is managed by payment gateway
+    updateStatus(newOrderStatus, data.paymentMethod === "Cash On Delivery" ? data.paymentStatus : undefined);
   };
 
   const handlePaymentStatusChange = (newPaymentStatus) => {
+    // Only allow payment status changes for COD orders
+    if (data.paymentMethod !== "Cash On Delivery") {
+      errorToast("Payment status for online payments is managed automatically by the payment gateway");
+      return;
+    }
     setSelectedStatus({
       orderStatus: data.status,
       paymentStatus: newPaymentStatus,
@@ -88,7 +105,11 @@ const OrderDetails = () => {
   console.log(data);
   const isStatusDisabled =
     data?.status === "Cancelled" || data?.status === "Returned";
-  const isPaymentDisabled = data?.paymentStatus === "Refunded";
+  // For online payments, payment status is always disabled (managed by payment gateway)
+  // For COD, disable if refunded
+  const isPaymentDisabled = 
+    data?.paymentMethod !== "Cash On Delivery" || 
+    data?.paymentStatus === "Refunded";
 
   if (isLoading) {
     return (
@@ -160,13 +181,13 @@ const OrderDetails = () => {
             <h3 className="font-semibold text-gray-700 flex items-center">
               <MapPin className="mr-2 text-blue-600" /> Shipping Address
             </h3>
-            <p>{data.shippingAddress.name}</p>
-            <p>{data.shippingAddress.street}</p>
+            <p>{data.shippingAddress?.label || data.shippingAddress?.name || ""}</p>
+            <p>{data.shippingAddress?.street || ""}</p>
             <p>
-              {data.shippingAddress.city}, {data.shippingAddress.state}{" "}
-              {data.shippingAddress.zip}
+              {data.shippingAddress?.city || ""}, {data.shippingAddress?.state || ""}{" "}
+              {data.shippingAddress?.postalCode || data.shippingAddress?.zip || ""}
             </p>
-            <p>{data.shippingAddress.country}</p>
+            <p>{data.shippingAddress?.country || ""}</p>
           </div>
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -285,18 +306,33 @@ const OrderDetails = () => {
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <span>Payment Status:</span>
-                <select
-                  value={data.paymentStatus}
-                  onChange={(e) => handlePaymentStatusChange(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm"
-                  disabled={isPaymentDisabled}
-                >
-                  {paymentStatusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                {/* Only allow manual payment status changes for COD orders */}
+                {data.paymentMethod === "Cash On Delivery" ? (
+                  <select
+                    value={data.paymentStatus}
+                    onChange={(e) => handlePaymentStatusChange(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                    disabled={isPaymentDisabled}
+                  >
+                    {paymentStatusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span
+                    className={`px-2 py-1 rounded text-sm font-medium ${
+                      data.paymentStatus === "Successful"
+                        ? "bg-green-100 text-green-800"
+                        : data.paymentStatus === "Refunded"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {data.paymentStatus} (Auto-managed by system)
+                  </span>
+                )}
               </div>
             </div>
             <div className="text-right">
@@ -311,6 +347,39 @@ const OrderDetails = () => {
             </div>
           </div>
         </div>
+
+        {/* Cancellation/Return Reason Display */}
+        {(data.cancellationReason || data.returnReason) && (
+          <div className="mt-6 space-y-4">
+            {data.cancellationReason && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <X className="mr-2 w-5 h-5 text-red-600" />
+                  <h4 className="font-semibold text-red-800 dark:text-red-300">
+                    Cancellation Reason
+                  </h4>
+                </div>
+                <p className="text-sm text-red-700 dark:text-red-400 mt-2 pl-7">
+                  {data.cancellationReason}
+                </p>
+              </div>
+            )}
+
+            {data.returnReason && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <RefreshCcw className="mr-2 w-5 h-5 text-yellow-600" />
+                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-300">
+                    Return Reason
+                  </h4>
+                </div>
+                <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-2 pl-7">
+                  {data.returnReason}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Order Status Modal */}
@@ -347,8 +416,8 @@ const OrderDetails = () => {
         </div>
       )}
 
-      {/* Payment Status Modal */}
-      {paymentModalVisible && (
+      {/* Payment Status Modal - Only for COD orders */}
+      {paymentModalVisible && data.paymentMethod === "Cash On Delivery" && (
         <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/30 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h3 className="text-xl font-semibold">

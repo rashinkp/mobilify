@@ -104,17 +104,19 @@ const SignUp = () => {
 
 
   return (
-    <div className="h-screen">
-      <Form
-        title="Sign up"
-        fields={formFields}
-        onSubmit={handleSignup}
-        buttonText="Next"
-        extraLinks={extraLinks}
-        validationRules={signUpValidationSchema}
-      />
-      <div className="mt-5">
-        <GoogleSignIn />
+    <div className="min-h-screen flex items-center justify-center px-4 py-14">
+      <div className="w-full max-w-md">
+        <Form
+          title="Sign up"
+          fields={formFields}
+          onSubmit={handleSignup}
+          buttonText="Next"
+          extraLinks={extraLinks}
+          validationRules={signUpValidationSchema}
+        />
+        <div className="mt-5">
+          <GoogleSignIn />
+        </div>
       </div>
     </div>
   );

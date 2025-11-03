@@ -66,12 +66,18 @@ const ProductCard = ({ product, refetch }) => {
     <div className="group relative w-80 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300">
       <div onClick={handleClick} className="cursor-pointer">
         {/* Image Container */}
-        <div className="relative h-72 overflow-hidden rounded-t-xl">
-          <img
-            src={product?.images[0]?.secure_url || "/api/placeholder/320/288"}
-            alt={product.name}
-            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-          />
+        <div className="relative h-72 overflow-hidden rounded-t-xl bg-gray-200 dark:bg-gray-700">
+          {product?.images?.[0]?.secure_url || product?.imageUrl ? (
+            <img
+              src={product?.images?.[0]?.secure_url || product?.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+              <span className="text-sm">Image not available</span>
+            </div>
+          )}
           <button
             onClick={handleFavClick}
             className="wishlist-btn absolute top-4 right-4 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg 

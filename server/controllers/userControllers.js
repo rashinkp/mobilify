@@ -2,11 +2,11 @@ import asyncHandler from "express-async-handler";
 import User from "../models/userSchema.js";
 import generateToken from "../utils/generateToken.js";
 import { OTP } from "../models/otpSchema.js";
-import bcrypt from 'bcrypt';
 import Referral from "../models/referralsSchema.js";
 import Wallet from "../models/walletSchema.js";
 import Transaction from "../models/walletTransactionSchema.js";
 import { getRandomAmount } from "../utils/referralAmount.js";
+import { hashPassword, comparePassword } from "../utils/passwordHash.js";
 
 
 
@@ -33,7 +33,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOneAndUpdate(
     { _id: id },
-    { $set: { isBlocked: false } },
+    { $set: { isBlocked: false, isVerified: true } },
     { new: true }
   );
 
@@ -47,6 +47,10 @@ export const registerUser = asyncHandler(async (req, res) => {
 
     const reward = getRandomAmount();
     
+    // Validate reward is positive
+    if (!reward || reward <= 0) {
+      return res.status(400).json({ message: "Invalid referral reward amount" });
+    }
 
     const referralData = await Referral.create({
       referrer: referredUser._id ,
@@ -68,11 +72,11 @@ export const registerUser = asyncHandler(async (req, res) => {
           currency: "INR",
         });
 
-
-
         await refereeWallet.save();
       } else {
-        refereeWallet.balance += reward;
+        // Ensure balance never goes negative when adding reward
+        refereeWallet.balance = Math.max(0, Number(refereeWallet.balance) + Number(reward));
+        await refereeWallet.save();
       }
 
       const refereeTransaction = await Transaction.create({
@@ -94,7 +98,9 @@ export const registerUser = asyncHandler(async (req, res) => {
 
         await referrerWallet.save();
       } else {
-        referrerWallet.balance += reward;
+        // Ensure balance never goes negative when adding reward
+        referrerWallet.balance = Math.max(0, Number(referrerWallet.balance) + Number(reward));
+        await referrerWallet.save();
       }
 
       const referrerTransaction = await Transaction.create({
@@ -131,6 +137,11 @@ export const userLogin = asyncHandler(async (req, res) => {
   
   const user = await User.findOne({ email });
 
+  if (!user) {
+    res.status(401);
+    throw new Error("Invalid email or password");
+  }
+
   //checking if user is blocked or not
 
   if (!user.password) {
@@ -138,7 +149,20 @@ export const userLogin = asyncHandler(async (req, res) => {
   }
   
 
-  if (user && (await user.matchPassword(password))) {
+  // Use helper function for password comparison
+  const isPasswordMatch = await comparePassword(password, user.password);
+  if (isPasswordMatch) {
+
+    // Check if user is verified (for OTP-based registration)
+    // Skip verification check for users without password (Google Sign-In users)
+    if (user.password && !user.isVerified) {
+      return res
+        .status(403)
+        .json({ 
+          message: "Please verify your email with OTP before logging in. Check your email for the verification code.",
+          requiresVerification: true 
+        });
+    }
 
     if (user.isBlocked || !user.isActive) {
       return res
@@ -154,9 +178,9 @@ export const userLogin = asyncHandler(async (req, res) => {
       email: user.email,
     });
   } else {
-    res.status(400);
+    res.status(401);
     console.log("Invalid user name or password");
-    throw new Error("Invalid user name or password");
+    throw new Error("Invalid email or password");
   }
 });
 
@@ -181,11 +205,22 @@ export const signWithGoogle = asyncHandler(async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      // Create new user - Google Sign-In users are automatically verified
       user = await User.create({
         email,
         name,
         picture: {secure_url:picture},
+        isVerified: true, // Google Sign-In users are verified via Google
       });
+    } else {
+      // Update existing user to be verified if not already
+      if (!user.isVerified) {
+        user = await User.findOneAndUpdate(
+          { email },
+          { $set: { isVerified: true } },
+          { new: true }
+        );
+      }
     } 
     
      if (user.isBlocked || !user.isActive) {
@@ -307,13 +342,13 @@ export const changePassword = asyncHandler(async (req, res) => {
 
   const oldPassword = user.password;
 
-  const isMatch = await bcrypt.compare(currentPassword, oldPassword);
+  const isMatch = await comparePassword(currentPassword, oldPassword);
 
   if (!isMatch) {
     return res.status(401).json({ error: "Current password is incorrect" });
   }
 
-  const isSameAsOld = await bcrypt.compare(newPassword, oldPassword);
+  const isSameAsOld = await comparePassword(newPassword, oldPassword);
   if (isSameAsOld) {
     return res
       .status(400)
@@ -322,7 +357,9 @@ export const changePassword = asyncHandler(async (req, res) => {
       });
   }
 
-  user.password = newPassword;
+  // Hash the new password explicitly before saving
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
   await user.save();
 
   res.status(200).json({ message: "Password changed successfully" });
@@ -344,7 +381,9 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  user.password = password;
+  // Hash the password explicitly before saving
+  const hashedPassword = await hashPassword(password);
+  user.password = hashedPassword;
   await user.save();
 
 
