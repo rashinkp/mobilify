@@ -2,6 +2,7 @@ import otpGenerator from "otp-generator";
 import { OTP } from "../models/otpSchema.js";
 import User from "../models/userSchema.js";
 import asyncHandler from "express-async-handler";
+import { hashPassword } from "../utils/passwordHash.js";
 
 export const sendOTP = async (req, res) => {
   try {
@@ -41,28 +42,26 @@ export const sendOTP = async (req, res) => {
     let user;
     let userId;
 
+    // Hash password explicitly before creating/updating user
+    const hashedPassword = await hashPassword(password);
+
     // If user exists but is not verified, update their info and OTP
     if (checkUserPresent && !checkUserPresent.isVerified) {
-      user = await User.findOneAndUpdate(
-        { email },
-        {
-          $set: {
-            name,
-            password,
-            otpId,
-            isBlocked: true,
-            isVerified: false,
-          },
-        },
-        { new: true }
-      );
+      // Find user first, then update and save
+      user = await User.findOne({ email });
+      user.name = name;
+      user.password = hashedPassword; // Already hashed
+      user.otpId = otpId;
+      user.isBlocked = true;
+      user.isVerified = false;
+      await user.save();
       userId = user._id;
     } else {
       // Create new user if they don't exist
       user = await User.create({
         name,
         email,
-        password,
+        password: hashedPassword, // Already hashed
         otpId,
         isBlocked: true,
         isVerified: false,

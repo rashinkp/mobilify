@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Trash2,
   Plus,
@@ -28,22 +28,28 @@ const ShoppingCart = () => {
   const [deletItem] = useDeleteFromCartMutation();
   const [updateCartQuantity] = useUpdateProductQuantityMutation();
   const dispatch = useDispatch();
+  
   const cartItems = data?.cartItems || [];
-
   const [products, setProducts] = useState([]);
+  const prevCartItemsRef = useRef(JSON.stringify(cartItems));
 
   const navigate = useNavigate();
 
-  console.log(products);
-
   useEffect(() => {
-    if (cartItems && cartItems.length > 0) {
-      const filteredItems = cartItems.filter(
-        (item) => Object.keys(item).length > 0
-      );
-      setProducts(filteredItems);
-    } else {
-      setProducts([]);
+    const currentCartItemsStr = JSON.stringify(cartItems);
+    
+    // Only update if cartItems actually changed
+    if (prevCartItemsRef.current !== currentCartItemsStr) {
+      prevCartItemsRef.current = currentCartItemsStr;
+      
+      if (cartItems && cartItems.length > 0) {
+        const filteredItems = cartItems.filter(
+          (item) => Object.keys(item).length > 0
+        );
+        setProducts(filteredItems);
+      } else {
+        setProducts([]);
+      }
     }
   }, [cartItems]);
 
@@ -118,8 +124,6 @@ const ShoppingCart = () => {
         const quantity = product?.quantity || 0;
 
         const offerPercent = Math.min(productOffer + categoryOffer, 100);
-
-        console.log(offerPercent);
 
         const discountedPrice = (price * (100 - offerPercent)) / 100;
 

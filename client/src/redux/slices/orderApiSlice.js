@@ -55,6 +55,14 @@ export const orderApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Orders", "Order", "All Orders"],
     }),
+    updateOrderStatus: builder.mutation({
+      query: (data) => ({
+        url: `${USER_URL}/order`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Orders", "Order", "All Orders"],
+    }),
     failedOrder: builder.mutation({
       query: (data) => ({
         url: `${USER_URL}/failedOrder`,
@@ -78,4 +86,4 @@ export const orderApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const {usePlaceOrderMutation , useGetOrderQuery , useGetIndividualOrderQuery , useGetSingleOrderQuery , useGetAllOrdersQuery , useGetAOrderQuery,  useChangeOrderStatusMutation , useFailedOrderMutation , useGetOrderDetailsQuery , useAverageOrderValueQuery} = orderApiSlice;
+export const {usePlaceOrderMutation , useGetOrderQuery , useGetIndividualOrderQuery , useGetSingleOrderQuery , useGetAllOrdersQuery , useGetAOrderQuery,  useChangeOrderStatusMutation , useUpdateOrderStatusMutation , useFailedOrderMutation , useGetOrderDetailsQuery , useAverageOrderValueQuery} = orderApiSlice;

@@ -2,11 +2,11 @@ import asyncHandler from "express-async-handler";
 import User from "../models/userSchema.js";
 import generateToken from "../utils/generateToken.js";
 import { OTP } from "../models/otpSchema.js";
-import bcrypt from 'bcrypt';
 import Referral from "../models/referralsSchema.js";
 import Wallet from "../models/walletSchema.js";
 import Transaction from "../models/walletTransactionSchema.js";
 import { getRandomAmount } from "../utils/referralAmount.js";
+import { hashPassword, comparePassword } from "../utils/passwordHash.js";
 
 
 
@@ -143,7 +143,9 @@ export const userLogin = asyncHandler(async (req, res) => {
   }
   
 
-  if (await user.matchPassword(password)) {
+  // Use helper function for password comparison
+  const isPasswordMatch = await comparePassword(password, user.password);
+  if (isPasswordMatch) {
 
     // Check if user is verified (for OTP-based registration)
     // Skip verification check for users without password (Google Sign-In users)
@@ -334,13 +336,13 @@ export const changePassword = asyncHandler(async (req, res) => {
 
   const oldPassword = user.password;
 
-  const isMatch = await bcrypt.compare(currentPassword, oldPassword);
+  const isMatch = await comparePassword(currentPassword, oldPassword);
 
   if (!isMatch) {
     return res.status(401).json({ error: "Current password is incorrect" });
   }
 
-  const isSameAsOld = await bcrypt.compare(newPassword, oldPassword);
+  const isSameAsOld = await comparePassword(newPassword, oldPassword);
   if (isSameAsOld) {
     return res
       .status(400)
@@ -349,7 +351,9 @@ export const changePassword = asyncHandler(async (req, res) => {
       });
   }
 
-  user.password = newPassword;
+  // Hash the new password explicitly before saving
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
   await user.save();
 
   res.status(200).json({ message: "Password changed successfully" });
@@ -371,7 +375,9 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  user.password = password;
+  // Hash the password explicitly before saving
+  const hashedPassword = await hashPassword(password);
+  user.password = hashedPassword;
   await user.save();
 
 

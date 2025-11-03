@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import FailedOrder from "../models/failedOrders.js";
 import Product from "../models/productSchema.js";
+import Coupon from "../models/couponSchema.js";
 
 export const addToFailedOrders = asyncHandler(async (req, res) => {
   const { userId } = req.user; 

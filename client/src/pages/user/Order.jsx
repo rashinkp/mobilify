@@ -22,7 +22,7 @@ import {
   PackageSearch,
 } from "lucide-react";
 import {
-  useChangeOrderStatusMutation,
+  useUpdateOrderStatusMutation,
   useGetSingleOrderQuery,
 } from "../../redux/slices/orderApiSlice";
 import { Link, useNavigate, useParams } from "react-router";
@@ -49,7 +49,7 @@ const OrderDetailsPage = () => {
     orderId,
   });
 
-  const [changeStatus] = useChangeOrderStatusMutation();
+  const [changeStatus] = useUpdateOrderStatusMutation();
 
   const order = data || {};
 

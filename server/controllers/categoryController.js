@@ -5,7 +5,13 @@ import Order from "../models/orderSchema.js";
 
 export const addCategory = asyncHandler(async (req, res) => {
   const { name, description, offer } = req.body;
-  const categoryExists = await Category.findOne({ name });
+  
+  // Case-insensitive check for existing category
+  // Escape special regex characters in the name
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const categoryExists = await Category.findOne({ 
+    name: { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+  });
 
   if (offer && (offer > 100 || offer < 0)) {
     return res.status(400).json({ message: "Offer must be valid" });
@@ -74,10 +80,12 @@ export const updateCategory = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Offer must be valid" });
   }
 
-  // Check if a category with the new name exists, excluding the current category
+  // Check if a category with the new name exists (case-insensitive), excluding the current category
   if (name) {
+    // Escape special regex characters in the name
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const categoryExists = await Category.findOne({
-      name,
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
       _id: { $ne: categoryId }, // Exclude the current category from the search
     });
 
