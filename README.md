@@ -185,3 +185,7 @@ ISC
 5. Fix any errors: `npm run lint:fix`
 6. Commit and push
 7. Create a Pull Request
+
+## Author
+
+Rashin KP · [Rashin’s portfolio](https://rashinkp.vercel.app/)
